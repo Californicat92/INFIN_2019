@@ -1,0 +1,15 @@
+mkdir 
+git clone https://github.com/Californicat92/INFIN_2019.git
+git status
+git add "fitxer"
+git commit (enter) -m "(afegir text)" (enter)
+load? y
+
+Ara s'ha de carregar a internet
+git push usuari + pw
+
+
+git log (historic canvis)
+gitg (entorn gràfic)
+
+Master es el que tens en el directori
