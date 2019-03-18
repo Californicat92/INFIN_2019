@@ -40,48 +40,69 @@ int main(int argc, char **argv)
 	char input;
 
 	ImprimirMenu();                             
-	input = getchar();
-
+	//input = getchar();
+	scanf("%s", &input);
 	while (input != 's')
 	{
-		if (input > '~'){input=' ';}
-		{	
-			switch (input)
-			{
-				case '1':
-					printf("Heu seleccionat l'opció 1\n");	
-					ImprimirMenu();                             
-					break;
-				case '2':
-					printf("Heu seleccionat l'opció 2\n");	
-					ImprimirMenu();                             
-					break;
-				case '3':
-					printf("Heu seleccionat l'opció 3\n");	
-					ImprimirMenu();                             
-					break;
-				case '4':
-					printf("Heu seleccionat l'opció 4\n");	
-					ImprimirMenu();                             
-					break;
-				case '5':
-					printf("Heu seleccionat l'opció 5\n");	
-					ImprimirMenu();                             
-					break;
-				case '6':
-					printf("Heu seleccionat l'opció 6\n");	
-					ImprimirMenu();                             
-					break;
-				case 0x0a: //Això és per enviar els 0x0a (line feed) que s'envia quan li donem al Enter
-					break;
-				default:
-					printf("Opció incorrecta\n");	
-					printf("He llegit %c \n",input);
-					break;
-			}
+		switch (input)
+		{
+			case '1':
+				printf("Heu seleccionat l'opció 1\n");	
+				int v;
+				do
+				{
+					printf("Posar en marxa [0] o parar [1]:");
+					scanf("%i", &v);
+					if (v==1){
+						printf("Es posa en marxa l'adquisicio.\n");
+						printf("Temps de mostreig desitjat(1-20):");
+						int t;
+						char temps[3];
+						scanf("%i", &t);
+						sprintf(temps, "%.2d", t);
+						printf("Numero de mostres per fer la mitjana(1-9):");
+						int mostres;
+						scanf("%i", &mostres);
+						printf("Temps:%.2d\nMostres:%i\n", t, mostres);
+						break;
+					}
+					else if (v==0){ 
+						printf("Adquisicio aturada.\n");
+						break;
+					}                      
+				} while (v!=1 || v!=0);    
+				ImprimirMenu();  
+				break;
+			case '2':
+				printf("Heu seleccionat l'opció 2\n");	
+				ImprimirMenu();                             
+				break;
+			case '3':
+				printf("Heu seleccionat l'opció 3\n");	
+				ImprimirMenu();                             
+				break;
+			case '4':
+				printf("Heu seleccionat l'opció 4\n");	
+				ImprimirMenu();                             
+				break;
+			case '5':
+				printf("Heu seleccionat l'opció 5\n");	
+				ImprimirMenu();                             
+				break;
+			case '6':
+				printf("Heu seleccionat l'opció 6\n");	
+				ImprimirMenu();                             
+				break;
+			case 0x0a: //Això és per enviar els 0x0a (line feed) que s'envia quan li donem al Enter
+				break;
+			default:
+				printf("Opció incorrecta\n");	
+				printf("He llegit %c \n",input);
+				break;
 		}
-			input = getchar();
-
+		
+		//input = getchar();
+		scanf("%s", &input);	
 	}
 	
 	return 0;
