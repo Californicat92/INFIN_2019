@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	int			nRead;
 	int 		result;
 	char		buffer[256];
-	char		missatge[20], mitjana2[20], missatge1[20];
+	char		missatge[20], mitjana2[20];
 	int v, temps[2], num;
 	float mitjana=37.432, maxim=40.345, minim=12.932;
 	char error[]="{  }";
