@@ -37,7 +37,7 @@ void ImprimirMenu(void);
 */
 int main(int argc, char **argv)                                                               
 {                                                                          
-	char input;
+	char input,cadena[10];
 
 	ImprimirMenu();                             
 	//input = getchar();
@@ -46,12 +46,14 @@ int main(int argc, char **argv)
 	{
 		switch (input)
 		{
+			// declaración de variables para bucles dentro del switch (escribir cadenas)
+			int i;
 			case '1':
 				printf("Heu seleccionat l'opció 1\n");	
 				int v;
 				do
 				{
-					printf("Posar en marxa [0] o parar [1]:");
+					printf("Posar en marxa [1] o parar [0]:");
 					scanf("%i", &v);
 					if (v==1){
 						printf("Es posa en marxa l'adquisicio.\n");
@@ -64,21 +66,38 @@ int main(int argc, char **argv)
 						int mostres;
 						scanf("%i", &mostres);
 						printf("Temps:%.2d\nMostres:%i\n", t, mostres);
+						printf("{M%i%s%i}\n",v,temps,mostres);
 						break;
 					}
 					else if (v==0){ 
 						printf("Adquisicio aturada.\n");
+						puts("{M0000}\n");
 						break;
 					}                      
 				} while (v!=1 || v!=0);    
 				ImprimirMenu();  
 				break;
+				
 			case '2':
-				printf("Heu seleccionat l'opció 2\n");	
+				printf("Heu seleccionat l'opció 2\n");
+				puts("{U}\n");
+				puts("Del servidor hem de rebre {Ucnnnnn}\nEscriu la demo a continuació: ");
+				scanf("%s",cadena);
+				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
+				printf("La temperatura mitja rebuda del servidor es: ");
+				for (i = 3; i < 8; i++) printf("%c",cadena[i]);
+				printf("ºC");
 				ImprimirMenu();                             
 				break;
 			case '3':
 				printf("Heu seleccionat l'opció 3\n");	
+				puts("{X}\n");
+				puts("Del servidor hem de rebre {Xcnnnnn}\nEscriu la demo a continuació: ");
+				scanf("%s",cadena);
+				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
+				printf("La temperatura maxima rebuda del servidor es: ");
+				for (i = 3; i < 8; i++) printf("%c",cadena[i]);
+				printf("ºC");
 				ImprimirMenu();                             
 				break;
 			case '4':
@@ -104,7 +123,7 @@ int main(int argc, char **argv)
 		//input = getchar();
 		scanf("%s", &input);	
 	}
-	
+	printf("Heu seleccionat la opció sortida\n");
 	return 0;
 }
 void ImprimirMenu(void)
@@ -117,6 +136,7 @@ void ImprimirMenu(void)
 	printf("4.-Reset màxim i mínim\n");
 	printf("5.-Demanar comptador\n");
 	printf("6.-Posar en marxa i parar adquisició\n");
+	printf("Premer 's' per sortir \n");
 	printf("-------------------------------------------------------\n");
 }
 
