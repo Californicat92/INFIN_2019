@@ -53,9 +53,14 @@ int main(int argc, char *argv[])
 	int			nRead;
 	int 		result;
 	char		buffer[256];
-	char		missatge[] = "#(2)(0,23.3)(10,23.3)";
+	char		missatge[20], mitjana2[20];
+	int v, temps[2], num;
+	float mitjana=37.432, maxim=40.345, minim=12.932;
+	char error[]="{  }";
 
-	/*Preparar l'adreça local*/
+
+
+	/*Preparar l'adreÃ§a local*/
 	sockAddrSize=sizeof(struct sockaddr_in);
 	bzero ((char *)&serverAddr, sockAddrSize); //Posar l'estructura a zero
 	serverAddr.sin_family = AF_INET;
@@ -68,30 +73,190 @@ int main(int argc, char *argv[])
 	/*Nominalitzar el socket*/
 	result = bind(sFd, (struct sockaddr *) &serverAddr, sockAddrSize);
 	
-	/*Crear una cua per les peticions de connexió*/
+	/*Crear una cua per les peticions de connexiÃ³*/
 	result = listen(sFd, SERVER_MAX_CONNECTIONS);
 	
-	/*Bucle s'acceptació de connexions*/
+	/*Bucle s'acceptaciÃ³ de connexions*/
 	while(1){
 		printf("\nServidor esperant connexions\n");
 
-		/*Esperar conexió. sFd: socket pare, newFd: socket fill*/
+		/*Esperar conexiÃ³. sFd: socket pare, newFd: socket fill*/
 		newFd=accept(sFd, (struct sockaddr *) &clientAddr, &sockAddrSize);
-		printf("Connexión acceptada del client: adreça %s, port %d\n",	inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+		printf("ConnexiÃ³n acceptada del client: adreÃ§a %s, port %d\n",	inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
 		/*Rebre*/
 		result = read(newFd, buffer, 256);
 		printf("Missatge rebut del client(bytes %d): %s\n",	result, buffer);
+		
+	while(buffer[0]!='s'){
 
+		if(buffer[0]=='{'){ //comprobamos que el mensaje empieza por '}'
+			switch(buffer[1]){ //en el segundo bit del array se escribira la funcion que queramos hacer segun la letra M,U,X...
+			
+				case 'M':
+					if (strlen(buffer)!=7){  //comprobamos que la array sea de 7 bits '{''M''v'"temp""temps""Num"'}'
+						
+						memset(missatge,'\0',20);
+						
+						error[1]='M';
+						error[2]='1';
+						strcat(missatge, error);// error en el protocolo
+						
+					break;
+					}
+			
+					if(buffer[2]==49){ //comprobamos si el array[2] 'v' es 0(48 ASCII) o 1(ASCII)
+					v=buffer[2];  //le damos el valor a la variable v
+					}	else if(buffer[2]==48){
+							memset(missatge,'\0',20);
+							v=buffer[2];
+							error[1]='M';
+							error[2]='0';
+							strcat(missatge, error);//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
+						break;
+						} 	else{		
+								memset(missatge,'\0',20);
+								error[1]='M';
+								error[2]='2';
+								strcat(missatge, error); //en el caso de que se un numero diferente a 0 o 1 imprimimos el error 2 de error en los parametros
+							break;
+							}
+					
+					if(buffer[3]>=50 && buffer[4]!=48){ // el tiempo tiene que se como maximo 20 asi que el primer bit como mucho es 2(50) y el segundo si es 2 tiene que ser 0(48)
+							memset(missatge,'\0',20);
+							error[1]='M';
+							error[2]='2';
+							strcat(missatge, error);//error de parametros 2
+					break;
+					} 	else {
+						temps[0]=buffer[3]; //en el caso de que todo este correcto damos los valores de la array a la variable temps
+						temps[1]=buffer[4];
+					}
+					if(buffer[5]!=48){ //en el bit 6 de la array tiene q ser un valor entre 1 y 9
+						num=buffer[5]; //si es valor es diferente a 0 damos el valor a la variable num
+					}	else{
+							memset(missatge,'\0',20);
+							error[1]='M';
+							error[2]='2';
+							strcat(missatge, error); //si es numero es 0 imprimimos el error 2 de parametros
+						break;
+						}	
+					if(buffer[6]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
+							memset(missatge,'\0',20);
+							error[1]='M';
+							error[2]='0';
+							strcat(missatge, error);//manda el mensaje que todo OK
+					}	 else{
+							memset(missatge,'\0',20);
+							error[1]='M';
+							error[2]='1';
+							strcat(missatge, error); //manda el mensaje de error en el protocolo
+						}
+					printf("\nel valor de marxa(v) es: %c", v);
+					printf("\nel temps per muostra es: %c%c", temps[0], temps[1]);
+					printf("\nel valor del nombre de mostres per fer la mitjana: %c", num);
+				break;
+
+			
+				case 'U':
+					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
+						missatge[0]='{';
+						missatge[1]='U';
+						missatge[2]='1';
+						missatge[3]='}'; //error de protocolo
+					break;
+					}
+					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
+							memset(missatge,'\0',20);
+							missatge[0]='{';
+							missatge[1]='U';
+							missatge[2]='0';
+							gcvt(mitjana, 4, mitjana2);						
+							strcat(missatge, mitjana2);
+							missatge[8]='}';
+							
+
+							
+										
+						//printf("{U0%.2f}", mitjana); //imprimimos el mensaje con la mitjana (esta mitjana tiene que tener 5 bits contando el punto)
+					}	 else{
+						memset(missatge,'\0',20);
+						missatge[0]='{';
+						missatge[1]='U';
+						missatge[2]='1';
+						missatge[3]='}'; //manda el mensaje de error en el protocolo
+						}
+				
+				break;
+			
+			
+				case 'X':
+					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
+						printf("{X1}"); //error de protocolo
+					break;
+					}
+					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
+						printf("{X0%.2f}", maxim); //imprimimos el mensaje con el maximo (este maximo tiene que tener 5 bits contando el punto)
+					}	 else{
+						printf("{X1}"); //manda el mensaje de error en el protocolo
+						}
+					
+				break;
+				
+				
+				case 'Y':
+					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
+						printf("{Y1}"); //error de protocolo
+					break;
+					}
+					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
+						printf("{Y0%.2f}", minim); //imprimimos el mensaje con el minimo (este minimo tiene que tener 5 bits contando el punto)
+					}	 else{
+						printf("{Y1}"); //manda el mensaje de error en el protocolo
+						}			
+			
+				break;
+				
+				
+				case 'R':
+					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
+						printf("{R1}"); //error de protocolo
+					break;
+					}
+					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
+						maxim=0; //reset del maxim
+						minim=1000; //reset del minim
+						printf("{R0}");
+					}	 else{
+						printf("{M1}"); //manda el mensaje de error en el protocolo
+						}
+				
+				break;
+
+				case 'B':
+					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
+						printf("{B1}"); //error de protocolo
+					break;
+					}
+					
+				break;
+			
+				default: printf("{M1}");
+		
+			}
+	
+		}
+		
 		/*Enviar*/
 		strcpy(buffer,missatge); //Copiar missatge a buffer
 		result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
-		printf("Missatge enviat a client(bytes %d): %s\n",	result, missatge);
-
+		printf("Missatge enviat a client(bytes %d): %s\n",	result, buffer);
+		
+		
+		result = read(newFd, buffer, 256);
+		printf("Missatge rebut del client(bytes %d): %s\n",	result, buffer);
+	}
 		/*Tancar el socket fill*/
 		result = close(newFd);
 	}
 }
-
-
-
