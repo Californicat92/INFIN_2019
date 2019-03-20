@@ -50,18 +50,18 @@ int main(int argc, char **argv)
 			int i;
 			case '1':
 				printf("Heu seleccionat l'opció 1\n");	
-				int v;
+				int v; //variable de marxa o paro
 				do
 				{
 					printf("Posar en marxa [1] o parar [0]:");
 					scanf("%i", &v);
-					if (v==1){
+					if (v==1){ //si se pone en marxa realizamos acciones
 						printf("Es posa en marxa l'adquisicio.\n");
 						printf("Temps de mostreig desitjat(1-20):");
 						int t;
-						char temps[3];
-						scanf("%i", &t);
-						sprintf(temps, "%.2d", t);
+						char temps[3]; //declaramos un array
+						scanf("%i", &t); //guardamos el tiempo en una variable de tipo entero
+						sprintf(temps, "%.2d", t); //escribimos el tiempo en el array para añadir un cero cuando el tiempo sea de un solo dígito
 						printf("Numero de mostres per fer la mitjana(1-9):");
 						int mostres;
 						scanf("%i", &mostres);
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 						printf("{M%i%s%i}\n",v,temps,mostres);
 						break;
 					}
-					else if (v==0){ 
+					else if (v==0){ //si se para finalizamos
 						printf("Adquisicio aturada.\n");
 						puts("{M0000}\n");
 						break;
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 				scanf("%s",cadena);
 				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
 				printf("La temperatura mitja rebuda del servidor es: ");
-				for (i = 3; i < 8; i++) printf("%c",cadena[i]);
+				for (i = 3; i < 8; i++) printf("%c",cadena[i]); //muestra los valores de las posiciones del array que guardan la temperatura
 				printf("ºC");
 				ImprimirMenu();                             
 				break;
@@ -96,20 +96,37 @@ int main(int argc, char **argv)
 				scanf("%s",cadena);
 				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
 				printf("La temperatura maxima rebuda del servidor es: ");
-				for (i = 3; i < 8; i++) printf("%c",cadena[i]);
+				for (i = 3; i < 8; i++) printf("%c",cadena[i]); //muestra los valores de las posiciones del array que guardan la temperatura
 				printf("ºC");
 				ImprimirMenu();                             
 				break;
 			case '4':
 				printf("Heu seleccionat l'opció 4\n");	
+				puts("{Y}\n");
+				puts("Del servidor hem de rebre {Ycnnnnn}\nEscriu la demo a continuació: ");
+				scanf("%s",cadena);
+				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
+				printf("La temperatura mínima rebuda del servidor es: ");
+				for (i = 3; i < 8; i++) printf("%c",cadena[i]); //muestra los valores de las posiciones del array que guardan la temperatura
+				printf("ºC");
 				ImprimirMenu();                             
 				break;
 			case '5':
 				printf("Heu seleccionat l'opció 5\n");	
+				puts("{R}\n");
+				puts("Del servidor hem de rebre {Rc}\nEscriu la demo a continuació: ");
+				scanf("%s",cadena);
+				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
 				ImprimirMenu();                             
 				break;
 			case '6':
 				printf("Heu seleccionat l'opció 6\n");	
+				puts("{B}\n");
+				puts("Del servidor hem de rebre {Bcnnnn}\nEscriu la demo a continuació: ");
+				scanf("%s",cadena);
+				printf("S'ha rebut el codi d'error %c\n",cadena[2]);
+				printf("Nombre de mostres guardades: ");
+				for (i = 3; i < 7; i++) printf("%c",cadena[i]); //muestra los valores de las posiciones del array que guardan las muestras
 				ImprimirMenu();                             
 				break;
 			case 0x0a: //Això és per enviar els 0x0a (line feed) que s'envia quan li donem al Enter

@@ -35,7 +35,8 @@
 #define REPLY_MSG_SIZE		500
 #define SERVER_PORT_NUM		5001
 
-
+void enviar(char buffer[256],char missatge[256],int result,int sFd);
+void rebre(char buffer[256],char missatge[256],int result,int sFd);
 
  /************************
 *
@@ -52,7 +53,7 @@ int main(int argc, char *argv[]){
 	int			mlen;
 	int 		result;
 	char		buffer[256];
-	char		missatge[] = "#1";
+	char		missatge[256] = "#1";
 
 	/*Crear el socket*/
 	sFd=socket(AF_INET,SOCK_STREAM,0);
@@ -74,17 +75,27 @@ int main(int argc, char *argv[]){
 	printf("\nConnexió establerta amb el servidor: adreça %s, port %d\n",	inet_ntoa(serverAddr.sin_addr), ntohs(serverAddr.sin_port));
 
 	/*Enviar*/
-	strcpy(buffer,missatge); //Copiar missatge a buffer
-	result = write(sFd, buffer, strlen(buffer));
-	printf("Missatge enviat a servidor(bytes %d): %s\n",	result, missatge);
+	enviar(buffer[256], missatge[256], result,sFd);
 
 	/*Rebre*/
-	result = read(sFd, buffer, 256);
-	printf("Missatge rebut del servidor(bytes %d): %s\n",	result, buffer);
-
+	rebre(buffer[256], missatge[256], result,sFd);
+	
 	/*Tancar el socket*/
 	close(sFd);
 
 	return 0;
 }
+void enviar(char *buffer[256],char *missatge[256],int result,int sFd){
+	
+	strcpy(buffer,missatge); //Copiar missatge a buffer
+	result = write(sFd, buffer, strlen(buffer));
+	printf("Missatge enviat a servidor(bytes %d): %s\n",	result, missatge);
 
+}
+
+void rebre(char buffer[256],char missatge[256],int result,int sFd){
+	
+	result = read(sFd, buffer, 256);
+	printf("Missatge rebut del servidor(bytes %d): %s\n",	result, buffer);
+
+}
