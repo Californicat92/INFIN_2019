@@ -42,6 +42,7 @@
 *
 *
 */
+void contador_dadas();
 
 int main(int argc, char *argv[])
 {
@@ -49,14 +50,16 @@ int main(int argc, char *argv[])
 	struct sockaddr_in	clientAddr;
 	int			sockAddrSize;
 	int			sFd;
-	int			newFd;
+	int			newFd, d, c;
 	int			nRead;
 	int 		result;
 	char		buffer[256];
-	char		missatge[20], mitjana2[20];
+	char		missatge[20], mitjana2[5], maxim2[5], minim2[5];
 	int v, temps[2], num;
-	float mitjana=37.432, maxim=40.345, minim=12.932;
+	float mitjana=37.43, maxim=40.34, minim=12.93;
 	char error[]="{  }";
+	char dada[]="{ 1     }";
+	int cont=0;
 
 
 
@@ -196,7 +199,13 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						printf("{X0%.2f}", maxim); //imprimimos el mensaje con el maximo (este maximo tiene que tener 5 bits contando el punto)
+							memset(missatge,'\0',20);
+							missatge[0]='{';
+							missatge[1]='X';
+							missatge[2]='0';
+							gcvt(maxim, 4, maxim2);						
+							strcat(missatge, maxim2);
+							missatge[8]='}';//imprimimos el mensaje con el maximo (este maximo tiene que tener 5 bits contando el punto)
 					}	 else{
 						printf("{X1}"); //manda el mensaje de error en el protocolo
 						}
@@ -210,7 +219,13 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						printf("{Y0%.2f}", minim); //imprimimos el mensaje con el minimo (este minimo tiene que tener 5 bits contando el punto)
+							memset(missatge,'\0',20);
+							missatge[0]='{';
+							missatge[1]='Y';
+							missatge[2]='0';
+							gcvt(minim, 4, minim2);						
+							strcat(missatge, minim2);
+							missatge[8]='}';  //imprimimos el mensaje con el minimo (este minimo tiene que tener 5 bits contando el punto)
 					}	 else{
 						printf("{Y1}"); //manda el mensaje de error en el protocolo
 						}			
@@ -228,7 +243,7 @@ int main(int argc, char *argv[])
 						minim=1000; //reset del minim
 						printf("{R0}");
 					}	 else{
-						printf("{M1}"); //manda el mensaje de error en el protocolo
+						printf("{R1}"); //manda el mensaje de error en el protocolo
 						}
 				
 				break;
@@ -241,7 +256,7 @@ int main(int argc, char *argv[])
 					
 				break;
 			
-				default: printf("{M1}");
+				default: printf("{B1}");
 		
 			}
 	
@@ -252,11 +267,26 @@ int main(int argc, char *argv[])
 		result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
 		printf("Missatge enviat a client(bytes %d): %s\n",	result, buffer);
 		
+		memset(buffer,'\0',256);
+		memset(missatge,'\0',20);
+		
 		
 		result = read(newFd, buffer, 256);
 		printf("Missatge rebut del client(bytes %d): %s\n",	result, buffer);
+		
 	}
 		/*Tancar el socket fill*/
 		result = close(newFd);
 	}
 }
+
+
+void contador_dadas(){
+	int i;
+	int cont=0;
+	for (i = 0; i <=3600; i++)
+	{
+		cont++;
+	}
+	
+	}
