@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
 			case '1':
 				printf("Heu seleccionat l'opció 1\n");	
 				int v=10; //variable de marxa o paro
-				while (v !=0 || v !=1)
+				while (v !=0 || v !=1) //protección valores erroneos
 				{
 					printf("Posar en marxa [1] o parar [0]:");
 					scanf("%i", &v);
@@ -73,24 +73,24 @@ int main(int argc, char *argv[]){
 
 						int t=25;
 						char temps[1]; //declaramos un array
-						while (t <01 || t>20)
+						while (t <01 || t>20) //protección valores erroneos
 						{
 							printf("Temps de mostreig desitjat(1-20):");
 							scanf("%i", &t); //guardamos el tiempo en una variable de tipo entero
 							sprintf(temps, "%.2d", t); //escribimos el tiempo en el array para añadir un cero cuando el tiempo sea de un solo dígito
 						}
 						int mostres;
-						while (mostres <01 || mostres>9)
+						while (mostres <01 || mostres>9) //protección valores erroneos
 						{
 							printf("Numero de mostres per fer la mitjana(1-9):");
 							scanf("%i", &mostres);
 						}
 						//Guardem la dada a enviar
-						sprintf(enviat,"{M%i%s%i}",v,temps,mostres);  
+						sprintf(enviat,"{M%i%s%i}",v,temps,mostres); //cargem a la variable a enviar les dades  
 					}
 					else if (v==0){ //si se para finalizamos
 						printf("Adquisicio aturada.\n");
-						sprintf(enviat,"{M0000}");
+						sprintf(enviat,"{M0000}"); //cargem a la variable a enviar les dades
 					}     
 					E_R_Datos(enviat, rebut);   
 					printf("\nS'ha rebut el codi d'error %c\n",rebut[2]);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]){
 				
 			case '2':
 				printf("Heu seleccionat l'opció 2\n");
-				sprintf(enviat,"{U}");
+				sprintf(enviat,"{U}"); //cargem a la variable a enviar les dades
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				printf("La temperatura mitja rebuda del servidor es: ");
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
 				break;
 			case '3':
 				printf("Heu seleccionat l'opció 3\n");	
-				sprintf(enviat,"{X}");
+				sprintf(enviat,"{X}"); //cargem a la variable a enviar les dades
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				printf("La temperatura màxima rebuda del servidor es: ");
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]){
 				break;
 			case '4':
 				printf("Heu seleccionat l'opció 4\n");	
-				sprintf(enviat,"{Y}");
+				sprintf(enviat,"{Y}"); //cargem a la variable a enviar les dades
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				printf("La temperatura mínima rebuda del servidor es: ");
@@ -131,14 +131,14 @@ int main(int argc, char *argv[]){
 				break;
 			case '5':
 				printf("Heu seleccionat l'opció 5\n");	
-				sprintf(enviat,"{R}");
+				sprintf(enviat,"{R}"); //cargem a la variable a enviar les dades
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				ImprimirMenu();                             
 				break;
 			case '6':
 				printf("Heu seleccionat l'opció 6\n");	
-				sprintf(enviat,"{B}");
+				sprintf(enviat,"{B}"); //cargem a la variable a enviar les dades
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				printf("Nombre de mostres guardades: ");

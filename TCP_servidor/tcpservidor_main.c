@@ -81,8 +81,10 @@ int main(int argc, char *argv[])
 	
 	/*Bucle s'acceptaciÃ³ de connexions*/
 	while(1){
+		
 		printf("\nServidor esperant connexions\n");
-
+		memset(buffer,'\0',256);
+		memset(missatge,'\0',20);
 		/*Esperar conexiÃ³. sFd: socket pare, newFd: socket fill*/
 		newFd=accept(sFd, (struct sockaddr *) &clientAddr, &sockAddrSize);
 		printf("ConnexiÃ³n acceptada del client: adreÃ§a %s, port %d\n",	inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
@@ -91,7 +93,6 @@ int main(int argc, char *argv[])
 		result = read(newFd, buffer, 256);
 		printf("Missatge rebut del client(bytes %d): %s\n",	result, buffer);
 		
-	while(buffer[0]!='s'){
 
 		if(buffer[0]=='{'){ //comprobamos que el mensaje empieza por '}'
 			switch(buffer[1]){ //en el segundo bit del array se escribira la funcion que queramos hacer segun la letra M,U,X...
@@ -260,19 +261,11 @@ int main(int argc, char *argv[])
 		
 			}
 	
-		}
 		
 		/*Enviar*/
 		strcpy(buffer,missatge); //Copiar missatge a buffer
 		result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
 		printf("Missatge enviat a client(bytes %d): %s\n",	result, buffer);
-		
-		memset(buffer,'\0',256);
-		memset(missatge,'\0',20);
-		
-		
-		result = read(newFd, buffer, 256);
-		printf("Missatge rebut del client(bytes %d): %s\n",	result, buffer);
 		
 	}
 		/*Tancar el socket fill*/
