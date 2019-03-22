@@ -54,13 +54,13 @@ int main(int argc, char *argv[]){
 	scanf("%s", &input);
 	while (input != 's')
 	{
+		memset (enviat,'\0',10);
+		memset (rebut,'\0',10);	
 		switch (input)
 		{
 			// declaración de variables para bucles dentro del switch (escribir cadenas)
 			int i;
-			//Limpiamos el espacio de memoria de enviat para que no se cuelen caracteres extraños
-			memset (enviat,'\0',10);
-			memset (rebut,'\0',10);			
+			//Limpiamos el espacio de memoria de enviat para que no se cuelen caracteres extraños	
 			case '1':
 				printf("Heu seleccionat l'opció 1\n");	
 				int v=10; //variable de marxa o paro
@@ -72,21 +72,22 @@ int main(int argc, char *argv[]){
 						printf("Es posa en marxa l'adquisicio.\n");
 
 						int t=25;
-						char temps[1]; //declaramos un array
+						char temps[2]; //declaramos un array			
+						memset(temps,'\0', 10); 	
 						while (t <01 || t>20) //protección valores erroneos
 						{
 							printf("Temps de mostreig desitjat(1-20):");
 							scanf("%i", &t); //guardamos el tiempo en una variable de tipo entero
-							sprintf(temps, "%.2d", t); //escribimos el tiempo en el array para añadir un cero cuando el tiempo sea de un solo dígito
 						}
-						int mostres;
+						int mostres=10;
 						while (mostres <01 || mostres>9) //protección valores erroneos
 						{
 							printf("Numero de mostres per fer la mitjana(1-9):");
 							scanf("%i", &mostres);
 						}
 						//Guardem la dada a enviar
-						sprintf(enviat,"{M%i%s%i}",v,temps,mostres); //cargem a la variable a enviar les dades  
+						sprintf(enviat,"{M%i%.2d%i}",v,t,mostres); //cargem a la variable a enviar les dades 
+						printf("S'està enviant: ||{M%i%.2d%i}||",v,t,mostres);
 					}
 					else if (v==0){ //si se para finalizamos
 						printf("Adquisicio aturada.\n");
@@ -125,7 +126,7 @@ int main(int argc, char *argv[]){
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				printf("La temperatura mínima rebuda del servidor es: ");
-				for (i = 3; i < 8; i++) printf("%c",rebut[i]); //muestra los valores de las posiciones del array que guardan la temperatura
+				for (i = 3; i < 7; i++) printf("%c",rebut[i]); //muestra los valores de las posiciones del array que guardan la temperatura
 				printf("ºC");
 				ImprimirMenu();                             
 				break;
@@ -164,12 +165,12 @@ void ImprimirMenu(void)
 {
 	printf("\n\nMenu:\n");
 	printf("-------------------------------------------------------\n");
-	printf("1.-Demanar última mitjana (promig del n-mostres anteriors)\n");
-	printf("2.-Demanar màxim\n");
-	printf("3.-Demanar mínim\n");
-	printf("4.-Reset màxim i mínim\n");
-	printf("5.-Demanar comptador\n");
-	printf("6.-Posar en marxa i parar adquisició\n");
+	printf("1.-Posar en marxa i parar adquisició\n");
+	printf("2.-Demanar última mitjana (promig del n-mostres anteriors)\n");
+	printf("3.-Demanar màxim\n");
+	printf("4.-Demanar mínim\n");
+	printf("5.-Reset màxim i mínim\n");
+	printf("6.-Demanar comptador\n");
 	printf("Premer 's' per sortir \n");
 	printf("-------------------------------------------------------\n");
 }
