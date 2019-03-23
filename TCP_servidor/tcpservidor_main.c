@@ -54,8 +54,8 @@ int main(int argc, char *argv[])
 	int			nRead;
 	int 		result;
 	char		buffer[256];
-	char		missatge[20], mitjana2[5], maxim2[5], minim2[5];
-	int v, temps[2], num;
+	char		missatge[20];
+	int v, temps[2], num, mostres=3200;
 	float mitjana=37.43, maxim=40.34, minim=12.93;
 	char error[]="{  }";
 	char dada[]="{ 1     }";
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 						break;
 					}
 					if(buffer[6]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-							sprintf(missatge,"{M0}");//manda el mensaje que todo OK
+						sprintf(missatge,"{M0}");//manda el mensaje que todo OK
 					}	 
 					else{
 						sprintf(missatge,"{M1}");//manda el mensaje de error en el protocolo
@@ -142,30 +142,22 @@ int main(int argc, char *argv[])
 			
 				case 'U':
 					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
-						missatge[0]='{';
-						missatge[1]='U';
-						missatge[2]='1';
-						missatge[3]='}'; //error de protocolo
+						sprintf(missatge,"{U1}");//error de protocolo
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-							missatge[0]='{';
-							missatge[1]='U';
-							missatge[2]='0';
-							gcvt(mitjana, 4, mitjana2);						
-							strcat(missatge, mitjana2);
-							missatge[8]='}';
-							
-
-							
-										
-						//printf("{U0%.2f}", mitjana); //imprimimos el mensaje con la mitjana (esta mitjana tiene que tener 5 bits contando el punto)
-					}	 else{
-						missatge[0]='{';
+						sprintf(missatge,"{U0%2.2f}",mitjana);
+			/*			missatge[0]='{';
 						missatge[1]='U';
-						missatge[2]='1';
-						missatge[3]='}'; //manda el mensaje de error en el protocolo
-						}
+						missatge[2]='0';
+						gcvt(mitjana, 4, mitjana2);						
+						strcat(missatge, mitjana2);
+						missatge[8]='}';							
+						//printf("{U0%.2f}", mitjana); //imprimimos el mensaje con la mitjana (esta mitjana tiene que tener 5 bits contando el punto)
+			*/		}	 
+					else{
+						sprintf(missatge,"{U1}");//manda el mensaje de error en el protocolo
+					}
 				
 				break;
 			
@@ -177,17 +169,20 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-							memset(missatge,'\0',20);
-							missatge[0]='{';
+							maxim = 40.34;
+							sprintf(missatge,"{X0%2.2f}",maxim);
+						/*	missatge[0]='{';
 							missatge[1]='X';
 							missatge[2]='0';
-							gcvt(maxim, 4, maxim2);						
+							gcvt(maxim, 4, maxim2);	
+											
 							strcat(missatge, maxim2);
 							missatge[8]='}';//imprimimos el mensaje con el maximo (este maximo tiene que tener 5 bits contando el punto)
-					}	 else{
+				*/	}	
+					else{
 						printf("{X1}"); //manda el mensaje de error en el protocolo
 						sprintf(missatge,"{X1}");
-						}
+					}
 					
 				break;
 				
@@ -199,14 +194,16 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-							memset(missatge,'\0',20);
-							missatge[0]='{';
+						minim = 40.34;
+						sprintf(missatge,"{Y0%2.2f}",minim);
+						/*	missatge[0]='{';
 							missatge[1]='Y';
 							missatge[2]='0';
 							gcvt(minim, 4, minim2);						
 							strcat(missatge, minim2);
-							missatge[8]='}';  //imprimimos el mensaje con el minimo (este minimo tiene que tener 5 bits contando el punto)
-					}	 else{
+							missatge[9]='}';  //imprimimos el mensaje con el minimo (este minimo tiene que tener 5 bits contando el punto)
+			*/		}	 
+					else{
 						printf("{Y1}"); //manda el mensaje de error en el protocolo
 						sprintf(missatge,"{Y1}");
 						}			
@@ -221,8 +218,8 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						maxim=0; //reset del maxim
-						minim=1000; //reset del minim
+						maxim=00.00; //reset del maxim
+						minim=00.00; //reset del minim
 						printf("{R0}");
 						sprintf(missatge,"{R0}");
 					}	
@@ -238,11 +235,9 @@ int main(int argc, char *argv[])
 						sprintf(missatge,"{B10000}");
 					break;
 					}
-					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						maxim=0; //reset del maxim
-						minim=1000; //reset del minim
+					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine con '}'
 						printf("{B0}");
-						sprintf(missatge,"{B0XXXX}");
+						sprintf(missatge,"{B0%.4d}",mostres);
 					}	
 					else{
 						printf("{B1}"); //manda el mensaje de error en el protocolo

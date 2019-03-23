@@ -86,8 +86,7 @@ int main(int argc, char *argv[]){
 							scanf("%i", &mostres);
 						}
 						//Guardem la dada a enviar
-						sprintf(enviat,"{M%i%.2d%i}",v,t,mostres); //cargem a la variable a enviar les dades 
-						printf("S'està enviant: ||{M%i%.2d%i}||",v,t,mostres);
+						sprintf(enviat,"{M%i%.2d%i}",v,t,mostres); //cargem a la variable a enviar les dades
 					}
 					else if (v==0){ //si se para finalizamos
 						printf("Adquisicio aturada.\n");
@@ -126,7 +125,7 @@ int main(int argc, char *argv[]){
 				E_R_Datos(enviat, rebut);
 				printf("S'ha rebut el codi d'error %c\n",rebut[2]);
 				printf("La temperatura mínima rebuda del servidor es: ");
-				for (i = 3; i < 7; i++) printf("%c",rebut[i]); //muestra los valores de las posiciones del array que guardan la temperatura
+				for (i = 3; i < 8; i++) printf("%c",rebut[i]); //muestra los valores de las posiciones del array que guardan la temperatura
 				printf("ºC");
 				ImprimirMenu();                             
 				break;
