@@ -42,7 +42,7 @@
 *
 *
 */
-void contador_dadas();
+void comptador_dades(float maxim, float minim, float mitja, int nmitja,int comptador);
 
 int main(int argc, char *argv[])
 {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	int 		result;
 	char		buffer[256];
 	char		missatge[20];
-	int v, temps[2], num, mostres=3200;
+	int v, temps[2], num, mostres=0, nmitja=1;
 	float mitjana=37.43, maxim=40.34, minim=12.93;
 	char error[]="{  }";
 	char dada[]="{ 1     }";
@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 	while(1){
 		
 		printf("\nServidor esperant connexions\n");
+//comptador_dades(maxim,minim,mitjana,nmitja,mostres);
 
 		memset(missatge,'\0',20);
 		/*Esperar conexiÃ³. sFd: socket pare, newFd: socket fill*/
@@ -139,7 +140,6 @@ int main(int argc, char *argv[])
 					printf("\nEl valor del nombre de mostres per fer la mitjana: %c", num);
 				break;
 
-			
 				case 'U':
 					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
 						sprintf(missatge,"{U1}");//error de protocolo
@@ -147,20 +147,11 @@ int main(int argc, char *argv[])
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
 						sprintf(missatge,"{U0%2.2f}",mitjana);
-			/*			missatge[0]='{';
-						missatge[1]='U';
-						missatge[2]='0';
-						gcvt(mitjana, 4, mitjana2);						
-						strcat(missatge, mitjana2);
-						missatge[8]='}';							
-						//printf("{U0%.2f}", mitjana); //imprimimos el mensaje con la mitjana (esta mitjana tiene que tener 5 bits contando el punto)
-			*/		}	 
+					}	 
 					else{
 						sprintf(missatge,"{U1}");//manda el mensaje de error en el protocolo
 					}
-				
 				break;
-			
 			
 				case 'X':
 					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
@@ -169,23 +160,13 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-							maxim = 40.34;
-							sprintf(missatge,"{X0%2.2f}",maxim);
-						/*	missatge[0]='{';
-							missatge[1]='X';
-							missatge[2]='0';
-							gcvt(maxim, 4, maxim2);	
-											
-							strcat(missatge, maxim2);
-							missatge[8]='}';//imprimimos el mensaje con el maximo (este maximo tiene que tener 5 bits contando el punto)
-				*/	}	
+						maxim = 40.34;
+						sprintf(missatge,"{X0%2.2f}",maxim);
+					}	
 					else{
-						printf("{X1}"); //manda el mensaje de error en el protocolo
-						sprintf(missatge,"{X1}");
+						sprintf(missatge,"{X1}"); //manda el mensaje de error en el protocolo
 					}
-					
 				break;
-				
 				
 				case 'Y':
 					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
@@ -196,79 +177,84 @@ int main(int argc, char *argv[])
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
 						minim = 40.34;
 						sprintf(missatge,"{Y0%2.2f}",minim);
-						/*	missatge[0]='{';
-							missatge[1]='Y';
-							missatge[2]='0';
-							gcvt(minim, 4, minim2);						
-							strcat(missatge, minim2);
-							missatge[9]='}';  //imprimimos el mensaje con el minimo (este minimo tiene que tener 5 bits contando el punto)
-			*/		}	 
+					}	 
 					else{
-						printf("{Y1}"); //manda el mensaje de error en el protocolo
-						sprintf(missatge,"{Y1}");
-						}			
-			
+						sprintf(missatge,"{Y1}"); //manda el mensaje de error en el protocolo
+					}			
 				break;
-				
 				
 				case 'R':
 					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
-						printf("{R1}"); //error de protocolo
-						sprintf(missatge,"{R1}");
+						sprintf(missatge,"{R1}"); //error de protocolo
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
 						maxim=00.00; //reset del maxim
 						minim=00.00; //reset del minim
-						printf("{R0}");
 						sprintf(missatge,"{R0}");
 					}	
 					else{
-						printf("{R1}"); //manda el mensaje de error en el protocolo
-						sprintf(missatge,"{R1}");
+						sprintf(missatge,"{R1}");//manda el mensaje de error en el protocolo
 					}
 				break;
 
 				case 'B':
 					if(strlen(buffer)!=3){ //comprobamos que el array tenga 3 bits
-						printf("{B1}"); //error de protocolo
-						sprintf(missatge,"{B10000}");
+						sprintf(missatge,"{B10000}"); //error de protocolo
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine con '}'
-						printf("{B0}");
 						sprintf(missatge,"{B0%.4d}",mostres);
 					}	
 					else{
-						printf("{B1}"); //manda el mensaje de error en el protocolo
-						sprintf(missatge,"{B10000}");
+						sprintf(missatge,"{B10000}");//manda el mensaje de error en el protocolo
 					}
 				break;
+				
 				default: 
 					printf("{B1}");
 					sprintf(missatge,"{B1}");
 				break;
 			}
-	
-		
-		/*Enviar*/
-		strcpy(buffer,missatge); //Copiar missatge a buffer
-		result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
-		printf("Missatge enviat a client(bytes %d): %s\n",	result, missatge);
-		memset(buffer,'\0',256);		
-	}
+//comptador_dades(maxim,minim,mitjana,nmitja,mostres);
+			/*Enviar*/
+			strcpy(buffer,missatge); //Copiar missatge a buffer
+			result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
+			printf("Missatge enviat a client(bytes %d): %s\n",	result, missatge);
+			memset(buffer,'\0',256);		
+		}
 		/*Tancar el socket fill*/
 		result = close(newFd);
 	}
 }
 
 
-void contador_dadas(){
+void comptador_dades(float maxim, float minim, float mitja, int nmitja,int comptador){
+	comptador=0;
+	minim = 50;
+	maxim = 0;
+	nmitja=1;
 	int i;
-	int cont=0;
-	for (i = 0; i <=3600; i++)
-	{
-		cont++;
+	float dades[3600],mostra=0,temp;	
+	while(comptador<3600){
+		dades[comptador] = rand()%10/.27;
+		mostra = dades[comptador%3600];
+		printf("%.2f\n",mostra);
+		if (mostra>maxim)
+		{
+			maxim = mostra;
+		}
+		else if (mostra<minim)
+		{
+			minim=mostra;
+		}
+		temp = mostra;
+		i=0;
+		for (i = comptador; i == nmitja; i--)
+		{
+			temp = dades[i] + temp;
+		}
+		mitja = temp / nmitja;
+		comptador++;
 	}
-	
-	}
+}
