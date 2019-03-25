@@ -42,7 +42,7 @@
 *
 *
 */
-void comptador_dades(float maxim, float minim, float mitja, int nmitja,int comptador);
+void comptador_dades(float *maxim, float *minim, float *mitja, int *comptador, int nmitja);
 
 int main(int argc, char *argv[])
 {
@@ -55,11 +55,8 @@ int main(int argc, char *argv[])
 	int 		result;
 	char		buffer[256];
 	char		missatge[20];
-	int v, temps[2], num, mostres=0, nmitja=1;
-	float mitjana=37.43, maxim=40.34, minim=12.93;
-	char error[]="{  }";
-	char dada[]="{ 1     }";
-	int cont=0;
+	int v, temps[2], num, mostres, nmitja=1;
+	float mitjana=00.00, maxim=00.00, minim=00.00;
 
 
 
@@ -83,7 +80,7 @@ int main(int argc, char *argv[])
 	while(1){
 		
 		printf("\nServidor esperant connexions\n");
-//comptador_dades(maxim,minim,mitjana,nmitja,mostres);
+comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 
 		memset(missatge,'\0',20);
 		/*Esperar conexiÃ³. sFd: socket pare, newFd: socket fill*/
@@ -146,6 +143,7 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
+comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						sprintf(missatge,"{U0%2.2f}",mitjana);
 					}	 
 					else{
@@ -160,7 +158,7 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						maxim = 40.34;
+comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						sprintf(missatge,"{X0%2.2f}",maxim);
 					}	
 					else{
@@ -175,7 +173,7 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						minim = 40.34;
+comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						sprintf(missatge,"{Y0%2.2f}",minim);
 					}	 
 					else{
@@ -204,6 +202,8 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine con '}'
+					
+comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						sprintf(missatge,"{B0%.4d}",mostres);
 					}	
 					else{
@@ -216,7 +216,6 @@ int main(int argc, char *argv[])
 					sprintf(missatge,"{B1}");
 				break;
 			}
-//comptador_dades(maxim,minim,mitjana,nmitja,mostres);
 			/*Enviar*/
 			strcpy(buffer,missatge); //Copiar missatge a buffer
 			result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
@@ -229,32 +228,33 @@ int main(int argc, char *argv[])
 }
 
 
-void comptador_dades(float maxim, float minim, float mitja, int nmitja,int comptador){
-	comptador=0;
-	minim = 50;
-	maxim = 0;
-	nmitja=1;
-	int i;
+void comptador_dades(float *maxim, float *minim, float *mitja, int *comptador, int nmitja){
+	*comptador=0;
+	*minim = 50;
+	*maxim = 0;
+	
+	int i,c;
 	float dades[3600],mostra=0,temp;	
-	while(comptador<3600){
-		dades[comptador] = rand()%10/.27;
-		mostra = dades[comptador%3600];
-		printf("%.2f\n",mostra);
-		if (mostra>maxim)
+	while(*comptador<3600){
+		dades[*comptador] = rand()%10/.27;
+		mostra = dades[*comptador%3600];
+		//printf("%.2f\n",mostra);
+		if (mostra>*maxim)
 		{
-			maxim = mostra;
+			*maxim = mostra;
 		}
-		else if (mostra<minim)
+		else if (mostra<*minim)
 		{
-			minim=mostra;
+			*minim=mostra;
 		}
 		temp = mostra;
-		i=0;
-		for (i = comptador; i == nmitja; i--)
+	
+		for (i = *comptador,c=1; c == nmitja; i--, c++)
 		{
-			temp = dades[i] + temp;
+			temp = temp + dades[i];
 		}
-		mitja = temp / nmitja;
-		comptador++;
+		*mitja = temp / nmitja;
+		*comptador++;
+		printf("%d\n",comptador);
 	}
 }
