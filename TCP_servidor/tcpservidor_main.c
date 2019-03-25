@@ -73,17 +73,20 @@ int main(int argc, char *argv[])
 	/*Nominalitzar el socket*/
 	result = bind(sFd, (struct sockaddr *) &serverAddr, sockAddrSize);
 	
-	/*Crear una cua per les peticions de connexiÃ³*/
+	/*Crear una cua per les peticions de connexio*/
 	result = listen(sFd, SERVER_MAX_CONNECTIONS);
-	
 	/*Bucle s'acceptaciÃ³ de connexions*/
+	
+	/*Crear 3600 dades aleatories*/
+	comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 	while(1){
+	
+
 		
 		printf("\nServidor esperant connexions\n");
-comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
-
 		memset(missatge,'\0',20);
-		/*Esperar conexiÃ³. sFd: socket pare, newFd: socket fill*/
+		
+		/*Esperar conexio. sFd: socket pare, newFd: socket fill*/
 		newFd=accept(sFd, (struct sockaddr *) &clientAddr, &sockAddrSize);
 		printf("ConnexiÃ³n acceptada del client: adreÃ§a %s, port %d\n",	inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
@@ -104,6 +107,7 @@ comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 					if(buffer[2]==49 || buffer[2]==48){ //comprobamos si el array[2] 'v' es 0(48 ASCII) o 1(49 ASCII)
 						v=buffer[2];  //le damos el valor a la variable v
 						sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
+						comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						break;
 					} 	
 					else{		
@@ -143,7 +147,6 @@ comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						sprintf(missatge,"{U0%2.2f}",mitjana);
 					}	 
 					else{
@@ -158,8 +161,7 @@ comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
-						sprintf(missatge,"{X0%2.2f}",maxim);
+						if (maxim < 10){sprintf(missatge,"{X00%.2f}",maxim);}else{sprintf(missatge,"{X0%.2f}",maxim);}
 					}	
 					else{
 						sprintf(missatge,"{X1}"); //manda el mensaje de error en el protocolo
@@ -173,8 +175,8 @@ comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
-						sprintf(missatge,"{Y0%2.2f}",minim);
+						if (minim < 10){sprintf(missatge,"{Y00%.2f}",minim);}else{sprintf(missatge,"{Y0%.2f}",minim);}
+						
 					}	 
 					else{
 						sprintf(missatge,"{Y1}"); //manda el mensaje de error en el protocolo
@@ -202,8 +204,6 @@ comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine con '}'
-					
-comptador_dades(&maxim,&minim,&mitjana,&mostres,nmitja);
 						sprintf(missatge,"{B0%.4d}",mostres);
 					}	
 					else{
@@ -234,11 +234,10 @@ void comptador_dades(float *maxim, float *minim, float *mitja, int *comptador, i
 	*maxim = 0;
 	
 	int i,c;
-	float dades[3600],mostra=0,temp;	
-	while(*comptador<3600){
-		dades[*comptador] = rand()%10/.27;
-		mostra = dades[*comptador%3600];
-		//printf("%.2f\n",mostra);
+	float dades[5],mostra=0,temp;	
+	while(*comptador<5){
+		dades[*comptador] = (rand()%10)/0.27;
+		mostra = dades[*comptador%5];
 		if (mostra>*maxim)
 		{
 			*maxim = mostra;
@@ -254,7 +253,6 @@ void comptador_dades(float *maxim, float *minim, float *mitja, int *comptador, i
 			temp = temp + dades[i];
 		}
 		*mitja = temp / nmitja;
-		*comptador++;
-		printf("%d\n",comptador);
+		*comptador = *comptador + 1;
 	}
 }
