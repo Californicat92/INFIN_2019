@@ -66,8 +66,14 @@ int main(int argc, char *argv[]){
 				int v=10; //variable de marxa o paro
 				while (v !=0 || v !=1) //protección valores erroneos
 				{
+		
 					printf("Posar en marxa [1] o parar [0]:");
 					scanf("%i", &v);
+					while (v != 1 && v!=0) //protección valores erroneos
+					{
+						printf("Posar en marxa [1] o parar [0]:");
+						scanf("%i", &v);
+					}
 					if (v==1){ //si se pone en marxa realizamos acciones
 						printf("Es posa en marxa l'adquisicio.\n");
 
@@ -91,7 +97,7 @@ int main(int argc, char *argv[]){
 					else if (v==0){ //si se para finalizamos
 						printf("Adquisicio aturada.\n");
 						sprintf(enviat,"{M0000}"); //cargem a la variable a enviar les dades
-					}     
+					}
 					E_R_Datos(enviat, rebut);   
 					printf("\nS'ha rebut el codi d'error %c\n",rebut[2]);
 					break;              
