@@ -33,7 +33,7 @@
 #define SERVER_MAX_CONNECTIONS	4
 
 #define REQUEST_MSG_SIZE	1024
-
+#define CONTAS 30
 
 /************************
 *
@@ -234,10 +234,10 @@ void comptador_dades(float *maxim, float *minim, float *mitja, int *comptador, i
 	*maxim = 0;
 	
 	int i,c;
-	float dades[5],mostra=0,temp;	
-	while(*comptador<5){
+	float dades[CONTAS],mostra=0,temp;	
+	while(*comptador<CONTAS){
 		dades[*comptador] = (rand()%10)/0.27;
-		mostra = dades[*comptador%5];
+		mostra = dades[*comptador%CONTAS];
 		if (mostra>*maxim)
 		{
 			*maxim = mostra;
