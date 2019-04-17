@@ -90,7 +90,7 @@ auxiliar=630;                 //PER A FER PROVES canviar aquesta per AnalogIn---
      
       mostres[j] = map(analogRead(AnalogIn), 0, 1023, 0.0, 110.0);  /* Es van guardan els valors de la entrada en format temperatura */
       j=j+1;                                                        /* S'incrementa el valor del punter <<j>>, la propera adquisició es guarada en j+1 */
-     
+      suma=0;
       for (len=j-1,cont=1;len>j-6,len>=0;len--,cont++){             /* Bucle que realitza la suma de les 5 últimes adquisicions sempre que l'array <<mostres>>                          */ 
         suma = suma + mostres[len];                                 /* tingui 5 o més mostres guardades, si no és així es farà la suma de la cuantitat de mostres que hi hagi guardades */
       }                                                             /* Amb la variable <<cont>> contem la cuantitat de mostres que sumem per a despres dividir-ho per aquest nombre.    */
