@@ -91,10 +91,10 @@ auxiliar=630;                 //PER A FER PROVES canviar aquesta per AnalogIn---
       mostres[j] = map(analogRead(AnalogIn), 0, 1023, 0.0, 110.0);  /* Es van guardan els valors de la entrada en format temperatura */
       j=j+1;                                                        /* S'incrementa el valor del punter <<j>>, la propera adquisició es guarada en j+1 */
      
-      for (len=j-1,cont=1;len>j-6,len>=0;len--,cont++){             /* Bucle que realitza la suma de les 5 últimes adquisicions */
-        suma = suma + mostres[len];
-      }
-      
+      for (len=j-1,cont=1;len>j-6,len>=0;len--,cont++){             /* Bucle que realitza la suma de les 5 últimes adquisicions sempre que l'array <<mostres>>                          */ 
+        suma = suma + mostres[len];                                 /* tingui 5 o més mostres guardades, si no és així es farà la suma de la cuantitat de mostres que hi hagi guardades */
+      }                                                             /* Amb la variable <<cont>> contem la cuantitat de mostres que sumem per a despres dividir-ho per aquest nombre.    */
+          
       temperatura=suma/cont;                                        /* Es guarda la mitja de les mostres a la variable <<temperatura>> */
     
       i=0;                                                          /* Cada cop que es realitza una adquisició es posa el contador de temps <<i>> a 0. */
@@ -110,13 +110,13 @@ void loop(){
  
 // Variables Locals ------------------------------------------------------------------------------------------------- 
 
-int BusError;
-bool Error=0;
-int sortida=0;
-bool ValorSortida=0;
-int entrada=0;
-bool ValorEntrada=0;
-int tempC=0;
+int BusError;           /* EN TOTS ELS CASOS -> Apunta a cada posició del array del missatge en el bucle For per a comprobar si hi ha error de protocol.*/
+bool Error=0;           /* EN TOTS ELS CASOS -> Si hi ha error de protocol dins del bucle For <<Error=1>>. */
+int sortida=0;          /* EN EL CAS S       -> Es guarda el numero de sortida que es vol activar o desactivar llegit del port serie. */
+bool ValorSortida=0;    /* EN EL CAS S       -> Es guarda el valor digital que te que agafar la sortida en funció del missatge rebut del port serie. */
+int entrada=0;          /* EN EL CAS E       -> Es guarda el numero de entrada que el port serie solicita llegir del arduino.  */
+bool ValorEntrada=0;    /* EN EL CAS E       -> Es guarda el valor digital que te la entrada per a enviar-lo al port serie. */
+int tempC=0;            /* EN EL CAS C       -> Es guarda el valor de la variable temperatura en valor digital (rang 0 a 1023) per a enviar-lo pel port serie */ 
  
  
 // PROGRAMA ---------------------------------------------------------------------------------------------------------
@@ -128,11 +128,79 @@ int tempC=0;
                                                                    la cuantitat de caracter que te aquest en la variable count */                                                           
       DEBUG(mensaje, count);
    
+// ERROR DE PROTOCOL
+/* És comú per a tots els tipus de missatges.
+   Es comprova que longitud del missatge sigui la correcte, que la "A" es trobi en la primera posició, la "Z" en la última i que la "A" 
+   no es repeteixi en cap altre posició del missatge.
+    mensaje [0] == A
+    mensaje [count] == Z
+    mensaje [1...count] != A 
+  */  
    
-// CONDICIONS PER A CADA TIPUS DE MISSATGE
-      switch (mensaje[1]){
-      
-        case 'M':
+ //   EXPLICACIÓ ERROR DE PROTOCOL I ESTRUCTURA DE CADA CAS
+ /*    
+    case 'M...C':
+         
+        if ((count== NUMERO DE BYTES ESPERATS ) && (mensaje[0]=='A') && (mensaje[count-1]=='Z'))   --> En aquest primer if es comproba que
+        {                                                                                              el mistage tingui el numero de bytes
+                                                                                                       esperats, que la "A" es trobi en la primera 
+                                                                                                       posició i que la "Z" es trobi en la última.
+           
+          for (BusError=1;BusError<=count;BusError++)            --> En aquest "for" es comproba que la "A" no es repeteixi en cap pasició del missatge      
+          {         
+           if (mensaje[BusError]=='A') Error=1;                  --> Si alguna posició del array és igual a "A" la variable <<Error=1>>.
+           }
+    
+           if ( Error==1) 
+           Serial.print("ERROR DE PARAMETRES\n");                --> ERROR DE PROTOCOL en el cas de que es repeteixi la "A" en alguna posició del missatge.
+                                                                        
+           else if ( CONDICIONS PER AL ERROR DE PARAMENTRES )    --> ERROR DE PARAMETRES
+                Serial.print(" CODI ERROR DE PARAMETRES \n");    
+                                 
+                 else                                              
+                   Serial.print(" CODI OKEY \n");                --> MISSATGE OKEY. S'envia el que es requereixi en cada cas.      
+                  
+                   
+                 
+         } else if ( Error==0) 
+             Serial.print("ERROR DE PARAMETRES\n");             --> ERROR DE PROTOCOL. Si no es compleixen les condicions del primer if i no s'ha enviat
+                                                                     un missatge d'error de protocol perque s'hagi repetit la "A" en alguna posició del
+                                                                     missatge (Error==0).                                                                                                                                   
+        
+        Error=0;                                                --> Es posa <<Error=0>> per a evitar que al entrar a un altre cas o cuan es rebi un altre
+                                                                     missatge salti un altre cop l'error de protocol.
+   
+  */
+
+// TIPUS DE MISSATGE
+/* En el byte 1 del array de mensaje (mensaje [1]) es llegeix quin tipus de missatge es rep i en funció d'aixó es selecciona un cas o un altre
+    mensaje [1] == M -> Marxa o aturada d'adquisisció de mostres i temps d'adquisició.
+    mensaje [1] == S -> Seleccionar i activar sortida. 
+    mensaje [1] == E -> Seleccionar i llegir entrada.
+    mensaje [1] == C -> Convertidor analogic digital.
+*/
+    
+   switch (mensaje[1]){
+        
+   
+     
+// CAS M: Marxa o aturada d'adquisisció de mostres i temps d'adquisició.
+  /* 
+     mensaje [2]: Marxa "==1" o atura "==0" d'enregistrament de temperatures.
+     mensaje [3]: digit de desenes de temps de mostreig.
+     mensaje [4]: digit de unitats de temps de mostreig.
+    
+     MarxaParo = mensaje [2]
+     tmostreig = (mensaje [3] i mensaje [4]) * 2   -> Es multiplica per dos perque la "i" de la interrupció del temporitzador 1 conta cada sego/2.
+    
+    ERROR DE PARAMENTRES:
+         mensaje [2] == MarxaParo             (Si el missatge solicita aturar la adquisició de mostres i ja esta aturada o viceversa)
+         mensaje [2] > 1                      (Si el digit és superior a 1 ja que s'espera una entrada booleana 1-Marxa 0-Aturar) 
+         mensaje [3] > 2                      (Si el digit és superior a 2 ja que s'espera un temps de mostreig de 1 a 20 s)
+         mensaje [3] <=1 i mensaje [4] > 9    (És una condició redundant ja que un digit no podra ser superior a 9)
+         mensaje [3] >=2 i mensaje [4] > 0    (Sempre que el primer digit valgui 2 el segon digit te que valdre 0)
+   */  
+       case 'M':
          if ((count==6) && (mensaje[0]=='A') && (mensaje[count-1]=='Z'))
          {
           for (BusError=1;BusError<=count;BusError++) 
@@ -140,25 +208,41 @@ int tempC=0;
             if (mensaje[BusError]=='A') Error=1;      
           }
     
-            if ( Error==1) Serial.print("AM1Z\n");
+            if ( Error==1) Serial.print("AM1Z\n");                         //Error protocol
                                                                         
             else if (((mensaje[2]== '0') && (MarxaParo==0)) || ((mensaje[2]== '1') && (MarxaParo==1)) || ((mensaje[2]-'0') > 1) || ((mensaje[3]-'0') > 2) || (((mensaje[3]-'0') <= 1) && ((mensaje[4]-'0') > 9)) || (((mensaje[3]-'0') >= 2) && ((mensaje[4]-'0') > 0 )))
-                Serial.print("AM2Z\n");                                    //Missatge d'error en el cas de no cumplir les condicions d'error de paramentres
+                Serial.print("AM2Z\n");                                    //Error de paramentres
                                  
                  else  
                  {                          
                    MarxaParo=mensaje[2]-'0';                             //SALVAR VALOR DE parada o marxa EN VARIABLE GLOVAL PER A TRACTAR EN LA INTERRUPCIÓ        (Es converteix un Char en Int restant el valor ASCII de 0)
                    tmostreig = ((mensaje[3]-'0')*10+(mensaje[4]-'0'))*2; //CONCATENEM DOS VALORS DEL MISATGE PER A LLEGIR-LOS COM UN ENTER I ES MULTIMPLICA PER DOS (El Timer funciona a 500ms, el doble de velociat que 1 segon) 
-                   Serial.print("AM0Z\n");
+                   Serial.print("AM0Z\n");                               //Missatge port serie tot Okey
                    
                  }
-         } else if ( Error==0) Serial.print("AM1Z\n");                    //Missatge d'error en el cas de no cumplir les condicions d'error de protocol
+         } else if ( Error==0) Serial.print("AM1Z\n");                    //Error de protocol
         
          Error=0;
        
          break;
 
-      
+
+     
+// CAS S: Seleccionar i activar sortida.
+  /* 
+     mensaje [2]: digit de desenes de la sortida.
+     mensaje [3]: digit de unitats de la sortida.
+     mensaje [4]: Activar "==1" o desactivar "==0" sortida.
+    
+     sortida = mensaje [2] i mensaje [3]
+     ValorSortida = mensaje [4]
+    
+    ERROR DE PARAMENTRES:
+         mensaje [2] > 1                      (Si el digit de decenes és superior a 1 ja que l'arduino nomes disposa de 13 sorties possibles)
+         mensaje [4] > 1                      (Si el digit és superior a 1 ja que s'espera una entrada booleana 1-Activar 0-Desactivar)
+         mensaje [2] == 0 i mensaje [3] > 9   (És una condició redundant ja que un digit no podra ser superior a 9) 
+         mensaje [2] >= 1 i mensaje [3] > 3   (Si el primer digit és 1 el segon digit te que ser inferior a 4, el nombre max de sorties és 13) 
+   */       
 
         case 'S':
          if ((count==6) && (mensaje[0]=='A') && (mensaje[count-1]=='Z'))
@@ -168,27 +252,42 @@ int tempC=0;
             if (mensaje[BusError]=='A') Error=1;      
           }
     
-            if ( Error==1) Serial.print("AS1Z\n");
+            if ( Error==1) Serial.print("AS1Z\n");                         //Error protocol
                                                                         
             else if (((mensaje[2]-'0') > 1) || ((mensaje[4]-'0') > 1) || (((mensaje[2]-'0') ==0) && ((mensaje[3]-'0') > 9)) || (((mensaje[2]-'0') >= 1) && ((mensaje[3]-'0') > 3 )))
-                Serial.print("AS2Z\n");                                    //Missatge d'error en el cas de no cumplir les condicions d'error de paramentres
+                Serial.print("AS2Z\n");                                    //Error de paramentres
                                  
                  else  
                  {                          
                  
-                   sortida = (mensaje[2]-'0')*10+(mensaje[3]-'0');
-                   ValorSortida=(mensaje[4]-'0');
-                   pinMode(sortida, OUTPUT);
-                   digitalWrite(sortida, ValorSortida);
-                   Serial.print("AS0Z\n");
+                   sortida = (mensaje[2]-'0')*10+(mensaje[3]-'0');        //CONCATENEM DOS VALORS DEL MISATGE PER A LLEGIR-LOS COM UN ENTER
+                   ValorSortida=(mensaje[4]-'0');                         //ES GUARDA EL VALOR DE LA SORTIDA COM UN ENTER
+                   pinMode(sortida, OUTPUT);                              //ES CONFIGURA EL PIN SELECCIONAT COM A SORTIDA
+                   digitalWrite(sortida, ValorSortida);                   //S'ESCRIU EL VALOR A LA SORTIDA  
+                   Serial.print("AS0Z\n");                                //Missatge port serie tot Okey
                  
                    
                  }
-        } else if ( Error==0) Serial.print("AS1Z\n");                    //Missatge d'error en el cas de no cumplir les condicions d'error de protocol
+        } else if ( Error==0) Serial.print("AS1Z\n");                    //Error de protocol
         
         Error=0;
         break;
-
+     
+     
+// CAS E: Seleccionar i llegir entrada.
+  /* 
+     mensaje [2]: digit de desenes de la entrada.
+     mensaje [3]: digit de unitats de la entrada.
+    
+     entrada = mensaje [2] i mensaje [3]
+     ValorEntrada: Es guarda el valor digital que te la entrada per a enviar-lo al port serie.
+    
+    ERROR DE PARAMENTRES:
+         mensaje [2] > 1                      (Si el digit de decenes és superior a 1 ja que l'arduino nomes disposa de 13 entrades possibles)
+         mensaje [2] == 0 i mensaje [3] > 9   (És una condició redundant ja que un digit no podra ser superior a 9) 
+         mensaje [2] >= 1 i mensaje [3] > 3   (Si el primer digit és 1 el segon digit te que ser inferior a 4, el nombre max de entrades és 13) 
+   */       
+     
         case 'E':
          if ((count==5) && (mensaje[0]=='A') && (mensaje[count-1]=='Z'))
          {
@@ -197,32 +296,42 @@ int tempC=0;
             if (mensaje[BusError]=='A') Error=1;      
           }
     
-            if ( Error==1) Serial.print("AE1Z\n");
+            if ( Error==1) Serial.print("AE1Z\n");                         //Error protocol
                                                                         
             else if (((mensaje[2]-'0') > 1) || (((mensaje[2]-'0') ==0) && ((mensaje[3]-'0') > 9)) || (((mensaje[2]-'0') >= 1) && ((mensaje[3]-'0') > 3 )))
-                Serial.print("AE2Z\n");                                    //Missatge d'error en el cas de no cumplir les condicions d'error de paramentres
+                Serial.print("AE2Z\n");                                    //Error de paramentres
                                  
                  else  
                  {                          
                  
-                   entrada = (mensaje[2]-'0')*10+(mensaje[3]-'0');
+                   entrada = (mensaje[2]-'0')*10+(mensaje[3]-'0');        //CONCATENEM DOS VALORS DEL MISATGE PER A LLEGIR-LOS COM UN ENTER                  
+                   pinMode(entrada, INPUT);                               //ES CONFIGURA EL PIN SELECCIONAT COM A ENTRADA
+                   ValorEntrada=digitalRead(entrada);                     //ES LLEGEIX EL VALOR DE LA ENTRADA I S'ESCRIU EN LA VARIABLE "ValoEntrada"
                    
-                   pinMode(entrada, INPUT);
-                   ValorEntrada=digitalRead(entrada);
-                   Serial.print("AE0");
+                   Serial.print("AE0");                                   //Missatge de tot okey (el 4 byte del missatge conte el valor de la entrada)
                    Serial.print(ValorEntrada);
                    Serial.print("Z\n");
                  
                    
                  }
-         } else if ( Error==0) Serial.print("AS1Z\n");                    //Missatge d'error en el cas de no cumplir les condicions d'error de protocol
+         } else if ( Error==0) Serial.print("AS1Z\n");                    //Error protocol
         
         Error=0;
        
         break;
         
 
-
+// CAS E: Seleccionar i llegir entrada.
+  /* 
+     temperatura: Valor de la ùltima mostra de temperatura amb la mitja de les 5 anteriors en [ºC]    
+     tempC:       Valor de la ùltima mostra de temperatura amb la mitja de les 5 anteriors en format [0..1023].
+     MarxaParo:   DEL CAS M -> Marxa "==1" o atura "==0" d'enregistrament de temperatures.
+    
+    ERROR DE PARAMENTRES:
+         MarxaParo == 0                       (Si la adquisició de mostres de temperatura no es troba en marxa no es pot donar valor de temperatura)
+         
+   */       
+     
         case 'C':
          if ((count==3) && (mensaje[0]=='A') && (mensaje[2]=='Z'))
          {
@@ -231,20 +340,21 @@ int tempC=0;
             if (mensaje[BusError]=='A') Error=1;      
           }
     
-            if ( Error==1) Serial.print("AC1Z\n");
+            if ( Error==1) Serial.print("AC1Z\n");                         //Error de protocol
                                                                         
             else if (MarxaParo==0)
-                Serial.print("AC2Z\n");                                    //Missatge d'error en el cas de no cumplir les condicions d'error de paramentres
+                Serial.print("AC2Z\n");                                    //Error de paramentres
                                  
                  else  
                  { 
-                       tempC = map(temperatura, 0.0, 110.0, 0, 1023); 
-                       Serial.print("AC0");       
+                       tempC = map(temperatura, 0.0, 110.0, 0, 1023);      //ES GUARDA EL VALOR DE LA TEMPERATURA EN "tempC" en format [0..1023]
+                      
+                       Serial.print("AC0");                                //Missatge de tot okey (el 4 byte del missatge conte el valor de la tempC)   
                        Serial.print(tempC);  
                        Serial.print("Z\n");              
                               
                  }
-        }else if( Error==0) Serial.print("AC1Z\n");                    //Missatge d'error en el cas de no cumplir les condicions d'error de protocol
+        }else if( Error==0) Serial.print("AC1Z\n");                       //Error de protocol
         
         Error=0;
        
