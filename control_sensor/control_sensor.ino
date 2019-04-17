@@ -64,7 +64,7 @@ ISR(TIMER1_COMPA_vect)
  
 // Variables Locals ------------------------------------------------------------------------------------------------- 
 
-int suma=0;                   /* Per a fer la mitja de les 5 ultimes adquisicións*/
+int suma=0;                   /* Per a fer la mitja de les 5 ultimes adquisicions*/
 
 int len;                      /* S'utilitza en el bucle For. Per a realitzar la suma de les 5 ùltimes posicions del vecteor mostres */
  
@@ -75,7 +75,7 @@ int cont=0;                   /* S'utilitza en el bucle For. Per a contar el num
 // PROGRAMA -------------------------------------------------------------------------------------------------------- 
 auxiliar=630;                 //PER A FER PROVES canviar aquesta per AnalogIn-----------------------analogRead(AnalogIn)
  
-   if (j>MIDA) j=0;           /* El punter de l'array de mostres <<j>> passa a valdre 0 sempre que sigui superior a la mida del array.
+   if (j>MIDA) j=0;           /* El punter de l'array de mostres <<j>> passa a valdre 0 sempre que sigui superior a la mida del array.*/
  
    if (MarxaParo==1) i=i+1;   /* Només incrementem la <<i>> si la adquisició de lectures es troba en Marxa ja que aquesta és la condició 
                                  per a contar temps. Si no incrementessim la <<i>> sota aquesta condició el temps aniria contant de tal 
