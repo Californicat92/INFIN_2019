@@ -127,6 +127,15 @@ int main(int argc, char **argv)
 	res = res + read(fd,buf+1,1);
 	res = res + read(fd,buf+2,1);
 	res = res + read(fd,buf+3,1);
+	res = res + read(fd,buf+4,1);
+
+	if (buf[2]=='0'){
+		printf("OK"); exit(-1);
+	}else if (buf[2]=='1'){
+		perror("Error de protocol\n"); exit(-1);
+	}else (buf[2]=='2'){
+		perror("Error paràmetres\n"); exit(-1);
+	}
 
 	printf("Rebuts %d bytes: ",res);
 	for (i = 0; i < res; i++)
