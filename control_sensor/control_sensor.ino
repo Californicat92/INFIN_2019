@@ -28,7 +28,7 @@ float mostres[MIDA];      /* Es guarden totes les mostres de la entrada analogic
 int i=0;                  /* Incrementa cada cop que entra en una interrupció i inicialitza cada cop que s'adquireix una mostra.                                */
 int j=0;                  /* Te la funció de punter en l'array de mostres (incrementa una posició cada cop que es guarda una mostra i s'inicialitza si j>MIDA). */
 int auxiliar=0;           /* CAP UTILITAT només realització de probes en substitució de la entrada analògica.                                                   */
-
+int suma;                 /* Per a fer la mitja de les 5 ultimes adquisicions*/
 
 
 //           *********************************************** SETUP ***************************************************
@@ -62,18 +62,9 @@ void setup()
 ISR(TIMER1_COMPA_vect)          
 {
  
-// Variables Locals ------------------------------------------------------------------------------------------------- 
-
-int suma=0;                   /* Per a fer la mitja de les 5 ultimes adquisicions*/
-
-int len;                      /* S'utilitza en el bucle For. Per a realitzar la suma de les 5 ùltimes posicions del vecteor mostres */
- 
-int cont=0;                   /* S'utilitza en el bucle For. Per a contar el numero de iteracions i després dividir la suma de les
-                                 ùltimes mostres */
-
-
 // PROGRAMA -------------------------------------------------------------------------------------------------------- 
-auxiliar=630;                 //PER A FER PROVES canviar aquesta per AnalogIn-----------------------analogRead(AnalogIn)
+ 
+auxiliar=auxiliar+5;          //PER A FER PROVES canviar aquesta per AnalogIn-----------------------analogRead(AnalogIn)
  
    if (j>MIDA) j=0;           /* El punter de l'array de mostres <<j>> passa a valdre 0 sempre que sigui superior a la mida del array.*/
  
@@ -89,18 +80,57 @@ auxiliar=630;                 //PER A FER PROVES canviar aquesta per AnalogIn---
    if ((i==tmostreig) && (MarxaParo==1)) {                          /* Es realitza la adquisició si i==tmostreig i seleccionem marxa d'adquisisció.*/
      
       mostres[j] = map(analogRead(AnalogIn), 0, 1023, 0.0, 110.0);  /* Es van guardan els valors de la entrada en format temperatura */
-      j=j+1;                                                        /* S'incrementa el valor del punter <<j>>, la propera adquisició es guarada en j+1 */
-      suma=0;
-      for (len=j-1,cont=1;len>j-6,len>=0;len--,cont++){             /* Bucle que realitza la suma de les 5 últimes adquisicions sempre que l'array <<mostres>>                          */ 
-        suma = suma + mostres[len];                                 /* tingui 5 o més mostres guardades, si no és així es farà la suma de la cuantitat de mostres que hi hagi guardades */
-      }                                                             /* Amb la variable <<cont>> contem la cuantitat de mostres que sumem per a despres dividir-ho per aquest nombre.    */
-          
-      temperatura=suma/cont;                                        /* Es guarda la mitja de les mostres a la variable <<temperatura>> */
-    
-      i=0;                                                          /* Cada cop que es realitza una adquisició es posa el contador de temps <<i>> a 0. */
-    }          
-    
-  }
+     
+     switch (j){
+
+      case 0:
+      
+        suma=mostres[j];
+        temperatura=suma; 
+
+      break;
+
+      case 1:
+     
+        suma=mostres[j]+mostres[j-1];
+        temperatura=suma/(j+1); 
+
+      break;
+
+      case 2:
+     
+        suma=mostres[j]+mostres[j-1]+mostres[j-2];
+        temperatura=suma/(j+1); 
+
+      break;
+
+      case 3:
+      
+        suma=mostres[j]+mostres[j-1]+mostres[j-2]+mostres[j-3];
+        temperatura=suma/(j+1); 
+
+      break;
+
+      case 4:
+      
+        suma=mostres[j]+mostres[j-1]+mostres[j-2]+mostres[j-3]+mostres[j-4];
+        temperatura=suma/(j+1); 
+      
+      break;
+
+      default:
+      
+        suma=mostres[j]+mostres[j-1]+mostres[j-2]+mostres[j-3]+mostres[j-4];
+        temperatura=suma/5; 
+         
+      break;
+
+      }
+      j=j+1; 
+
+      i=0;
+   }      
+}
 
 
 
