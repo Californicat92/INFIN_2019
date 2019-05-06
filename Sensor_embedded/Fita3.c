@@ -51,10 +51,12 @@ void Rebre(int fd,char *buf);
 int	ConfigurarSerie(void);
 void TancarSerie(int fd);
 
+char buf[100];
+
 int main(int argc, char **argv)
 {
 	int fd,v=10,t=25;
-	char buf[100];
+	
 	char missatge[100];
 	printf("Espera a que el sistema inicie\n");
 	
@@ -89,6 +91,11 @@ int main(int argc, char **argv)
 		}
 	}
 	Enviar(fd,missatge);
+	
+printf("----\n");
+
+sleep(3);	
+	
 	Rebre(fd,buf);
 	/*
 	int j=0;
@@ -134,7 +141,7 @@ int	ConfigurarSerie(void)
 	tcflush(fd, TCIFLUSH);
 	tcsetattr(fd,TCSANOW,&newtio);
 
-	sleep(1); //Per donar temps a que l'Arduino es recuperi del RESET
+	sleep(5); //Per donar temps a que l'Arduino es recuperi del RESET
 	return fd;
 }
 
@@ -162,18 +169,25 @@ void Enviar(int fd,char *missatge)
 }
 void Rebre(int fd,char *buf)
 {
-	int k = 0;
+	int k = 1;
 	int res = 0;
 	int bytes = 0;
 	
 	ioctl(fd, FIONREAD, &bytes);
+	
+	printf("bytes = %d\n",bytes);	
+	res = read(fd,buf,1);
+	printf("read = %c\n",buf[0]);
 	do
 	{
-		res = res + read(fd,&buf+k,1);
+		res = res + read(fd,buf+k,1);
+		printf("read = %c\n",buf[k]);
 		k++;
 	}
 	while (buf[k-1] != 'Z');
 	printf("Rebuts %d bytes: ",res);
+
+	
 	printf("%s\n",buf);
 	TancarSerie(fd);
 }
