@@ -288,7 +288,7 @@ char buffer [MIDA];
 
       size_t count = Serial.readBytesUntil('\n', mensaje, MIDA); /*LECTURA DEL MISSATGE. Es guarda el misatge en el array mensaje i 
                                                                    la cuantitat de caracter que te aquest en la variable count */                                                           
-      DEBUG(mensaje, count);
+      //DEBUG(mensaje, count);
    
     
    switch (mensaje[1]){
