@@ -45,11 +45,85 @@
 #define MODEMDEVICE "/dev/ttyACM0"		//Conexió directa PC(Linux) - Arduino
 #define _POSIX_SOURCE 1					//POSIX compliant source
 #define MIDA 100
+#define	MIDA_BUFFER 3600
 struct termios oldtio,newtio;
 void Enviar(int fd,char *missatge);
 void Rebre(int fd,char *buf);
 int	ConfigurarSerie(void);
 void TancarSerie(int fd);
+
+
+
+
+
+
+typedef struct _TipusMostra{
+	long int pos;
+	char	temperatura[5];
+}TipusMostra;
+
+struct{
+	TipusMostra *dades;
+	int	index_entrada; //Apunta al lloc on es posarà la sagüent mostra
+	int nombre_mostres; //Nombre de mostres que hi ha el el buffer circular
+}buffer_circular;
+
+void	buffer_cicular_inici(void){
+	buffer_circular.dades = malloc(sizeof(TipusMostra)*MIDA_BUFFER);
+	buffer_circular.index_entrada = 0;
+	buffer_circular.nombre_mostres = 0;
+}
+
+void	buffer_cicular_final(void){
+	free(buffer_circular.dades);
+}
+
+void	buffer_cicular_introduir(TipusMostra dada){
+	buffer_circular.dades[buffer_circular.index_entrada] = dada;
+
+	buffer_circular.index_entrada++;
+	if (buffer_circular.index_entrada == MIDA_BUFFER){
+		buffer_circular.index_entrada = 0; //Continuem pel principi: circular
+	}
+
+	if (buffer_circular.nombre_mostres < MIDA_BUFFER){ //Agumentar fins que estigui ple
+		buffer_circular.nombre_mostres++;
+	}
+
+}
+
+void	buffer_cicular_borrar_tot(void){
+	buffer_circular.index_entrada = 0;
+	buffer_circular.nombre_mostres = 0;
+}
+
+void	buffer_cicular_bolcat_dades(void){
+	int i;
+	TipusMostra dada;
+
+	if (buffer_circular.nombre_mostres < MIDA_BUFFER){
+
+		for (i=0;i<buffer_circular.nombre_mostres;i++){
+			dada = buffer_circular.dades[i];
+			printf("Temps: %ld Temperatura: %s\n", dada.pos, dada.temperatura);
+		}
+	}
+	else{
+		for (i=buffer_circular.index_entrada;i<MIDA_BUFFER;i++){
+			dada = buffer_circular.dades[i];
+			printf("Temps: %ld Temperatura: %s\n", dada.pos, dada.temperatura);
+		}
+		for (i=0;i<buffer_circular.index_entrada;i++){
+			dada = buffer_circular.dades[i];
+			printf("Temps: %ld Temperatura: %s\n", dada.pos, dada.temperatura);
+		}
+	}
+}
+
+
+
+
+
 
 int t;
 
@@ -95,15 +169,26 @@ int main(int argc, char **argv)
 	sleep(1);
 	memset(buf,'\0', MIDA);
 	Rebre(fd,buf);
+	
+	
 	int j=0;
+	int q=0;
+	TipusMostra TempSensor;
 	while(1)
 	{
-		printf("captura muestra...%i",j);
+		printf("captura muestra...%i\n",j);
 		memset(missatge,'\0', MIDA);
 		sprintf(missatge,"ACZ"); //Encenem LED 13
 		Enviar(fd,missatge);
-		usleep(500);
+		sleep(t);
 		Rebre(fd,buf);
+		buffer_cicular_inici();
+		TempSensor.pos = j;
+		printf("Dada guardada: %c%c%c%c%c\n",buf[3],buf[4],buf[5],buf[6],buf[7]);
+		for (q = 3; q < 8; q++) TempSensor.temperatura[q-2] = buf[q];
+		buffer_cicular_introduir(TempSensor);
+		//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
+		printf("---------------------\n");
 		j++;
 	};
 	TancarSerie(fd);
