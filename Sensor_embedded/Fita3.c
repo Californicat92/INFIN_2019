@@ -51,12 +51,12 @@ void Rebre(int fd,char *buf);
 int	ConfigurarSerie(void);
 void TancarSerie(int fd);
 
-char buf[100];
+int t;
 
 int main(int argc, char **argv)
 {
-	int fd,v=10,t=25;
-	
+	int fd,v=10;
+	char buf[100];
 	char missatge[100];
 	printf("Espera a que el sistema inicie\n");
 	
@@ -75,12 +75,12 @@ int main(int argc, char **argv)
 		}
 		if (v==1){ //si se pone en marcha realizamos acciones
 			printf("Es posa en marxa l'adquisicio.\n");
+			t=25; //modificació del temps per a complir amb la protecció
 			while (t <01 || t>20) //protección valores erroneos
 			{
 				printf("Temps de mostreig desitjat(1-20):");
 				scanf("%i", &t); //guardamos el tiempo en una variable de tipo entero
 			}
-			t=t/2; //Guardamos el tiempo en ms pero a mitad de tiempo (enunciado)
 			sprintf(missatge,"AM%i%.2iZ",v,t); //cargem a la variable a enviar les dades
 			break;
 		}
@@ -90,12 +90,10 @@ int main(int argc, char **argv)
 			sprintf(missatge,"AM000Z"); //cargem a la variable a enviar les dades
 		}
 	}
+	
 	Enviar(fd,missatge);
-	
-printf("----\n");
-
-sleep(3);	
-	
+	sleep(1);
+	memset(buf,'\0', MIDA);
 	Rebre(fd,buf);
 	/*
 	int j=0;
@@ -103,18 +101,13 @@ sleep(3);
 	{
 		printf("captura muestra...%i",j);
 		memset(missatge,'\0', MIDA);
-		sprintf(missatge,"AS131Z"); //Encenem LED 13
+		sprintf(missatge,"ACZ"); //Encenem LED 13
 		Enviar(fd,missatge);
+		usleep(500);
 		Rebre(fd,buf);
-		sleep(t);
-		memset(missatge,'\0', MIDA);
-		sprintf(missatge,"AS130Z"); //Apaguem LED 13
-		Enviar(fd,missatge);
-		Rebre(fd,buf);
-		sleep(t);
 		j++;
 	};*/
-
+	TancarSerie(fd);
 	return 0;
 }
 
@@ -141,7 +134,7 @@ int	ConfigurarSerie(void)
 	tcflush(fd, TCIFLUSH);
 	tcsetattr(fd,TCSANOW,&newtio);
 
-	sleep(5); //Per donar temps a que l'Arduino es recuperi del RESET
+	sleep(2); //Per donar temps a que l'Arduino es recuperi del RESET
 	return fd;
 }
 
@@ -160,35 +153,22 @@ void Enviar(int fd,char *missatge)
 	
 	if (res <0) {tcsetattr(fd,TCSANOW,&oldtio); perror(MODEMDEVICE); exit(-1); }
 	
-	printf("Enviats %d bytes: ",res);
-	for (i = 0; i <= res; i++)
-	{
-		printf("%c",missatge[i]);
-	}
-	printf("\n");
+	printf("Enviats %d bytes: %s\n",res,missatge);
 }
 void Rebre(int fd,char *buf)
 {
-	int k = 1;
+	int k = 0;
 	int res = 0;
 	int bytes = 0;
 	
 	ioctl(fd, FIONREAD, &bytes);
-	
-	printf("bytes = %d\n",bytes);	
-	res = read(fd,buf,1);
-	printf("read = %c\n",buf[0]);
+
 	do
 	{
 		res = res + read(fd,buf+k,1);
-		printf("read = %c\n",buf[k]);
 		k++;
 	}
-	while (buf[k-1] != 'Z');
-	printf("Rebuts %d bytes: ",res);
-
-	
-	printf("%s\n",buf);
-	TancarSerie(fd);
+	while (buf[k-1] != 'Z');	
+	printf("Rebuts %d bytes: %s\n",res,buf);
 }
 
