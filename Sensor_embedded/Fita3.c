@@ -95,7 +95,6 @@ int main(int argc, char **argv)
 	sleep(1);
 	memset(buf,'\0', MIDA);
 	Rebre(fd,buf);
-	/*
 	int j=0;
 	while(1)
 	{
@@ -106,7 +105,7 @@ int main(int argc, char **argv)
 		usleep(500);
 		Rebre(fd,buf);
 		j++;
-	};*/
+	};
 	TancarSerie(fd);
 	return 0;
 }
@@ -146,7 +145,6 @@ void TancarSerie(int fd)
 
 void Enviar(int fd,char *missatge)
 {
-	int i=0;
 	int res=0;
 	
 	res = write(fd,missatge,strlen(missatge));
