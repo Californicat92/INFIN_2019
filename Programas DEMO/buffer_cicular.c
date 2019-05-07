@@ -139,7 +139,7 @@ int main(int argc, char *argv[]){
 
 	printf("Borrem el buffer circular\n");
 	buffer_cicular_borrar_tot();
-
+	
 	printf("Fem un bocat del contingut del buffer circular\n");
 	buffer_cicular_bolcat_dades();
 

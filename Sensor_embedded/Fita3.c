@@ -45,7 +45,9 @@
 #define MODEMDEVICE "/dev/ttyACM0"		//Conexió directa PC(Linux) - Arduino
 #define _POSIX_SOURCE 1					//POSIX compliant source
 #define MIDA 100
-#define	MIDA_BUFFER 3600
+#define	MIDAS_BUFFER 3600
+
+
 struct termios oldtio,newtio;
 void Enviar(int fd,char *missatge);
 void Rebre(int fd,char *buf);
@@ -61,7 +63,7 @@ typedef struct _TipusMostra{
 	long int pos;
 	float	temperatura;
 }TipusMostra;
-
+TipusMostra dada; 
 struct{
 	TipusMostra *dades;
 	int	index_entrada; //Apunta al lloc on es posarà la sagüent mostra
@@ -69,7 +71,7 @@ struct{
 }buffer_circular;
 
 void	buffer_cicular_inici(void){
-	buffer_circular.dades = malloc(sizeof(TipusMostra)*MIDA_BUFFER);
+	buffer_circular.dades = malloc(sizeof(TipusMostra)*MIDAS_BUFFER);
 	buffer_circular.index_entrada = 0;
 	buffer_circular.nombre_mostres = 0;
 }
@@ -82,11 +84,11 @@ void	buffer_cicular_introduir(TipusMostra dada){
 	buffer_circular.dades[buffer_circular.index_entrada] = dada;
 
 	buffer_circular.index_entrada++;
-	if (buffer_circular.index_entrada == MIDA_BUFFER){
+	if (buffer_circular.index_entrada == MIDAS_BUFFER){
 		buffer_circular.index_entrada = 0; //Continuem pel principi: circular
 	}
 
-	if (buffer_circular.nombre_mostres < MIDA_BUFFER){ //Agumentar fins que estigui ple
+	if (buffer_circular.nombre_mostres < MIDAS_BUFFER){ //Agumentar fins que estigui ple
 		buffer_circular.nombre_mostres++;
 	}
 
@@ -101,28 +103,24 @@ void	buffer_cicular_bolcat_dades(void){
 	int i;
 	TipusMostra dada;
 
-	if (buffer_circular.nombre_mostres < MIDA_BUFFER){
+	if (buffer_circular.nombre_mostres < MIDAS_BUFFER){
 
 		for (i=0;i<buffer_circular.nombre_mostres;i++){
 			dada = buffer_circular.dades[i];
-			printf("Temps: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
 		}
 	}
 	else{
-		for (i=buffer_circular.index_entrada;i<MIDA_BUFFER;i++){
+		for (i=buffer_circular.index_entrada;i<MIDAS_BUFFER;i++){
 			dada = buffer_circular.dades[i];
-			printf("Temps: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
 		}
 		for (i=0;i<buffer_circular.index_entrada;i++){
 			dada = buffer_circular.dades[i];
-			printf("Temps: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
 		}
 	}
 }
-
-
-
-
 
 
 int t;
@@ -177,12 +175,11 @@ int main(int argc, char **argv)
 	
 	int j=0,w=0;
 	char lecturatemp[4];
-	
+	buffer_cicular_inici();
 	float temp,minim=100000,maxim=0,mitja=0;
-	TipusMostra TempSensor;
 	while(1)
 	{
-		printf("captura muestra...%i\n",j);
+		printf("capturando muestra...%i\n",j);
 		memset(missatge,'\0', MIDA);
 		//ENCENEM/APAGAMOS LED 13 PER INFORMAR DE COMUNICACIONS
 		if (w==0){w=1;}else{w=0;}
@@ -197,31 +194,25 @@ int main(int argc, char **argv)
 		sleep(t);
 		Rebre(fd,buf);
 		//-----------------------------
-		buffer_cicular_inici();
-		TempSensor.pos = j;
+		dada.pos = j;
 		sprintf(lecturatemp,"%c%c%c%c%c",buf[3],buf[4],buf[5],buf[6],buf[7]);
 		temp=atof(lecturatemp); // convertimos char a float
-		TempSensor.temperatura = temp;
-		buffer_cicular_introduir(TempSensor);
-		if (temp>maxim)
-		{
-			maxim = temp;
-		}
-		else if (temp<minim)
-		{
-			minim=temp;
-		}/*
+		dada.temperatura = temp;
+		buffer_cicular_introduir(dada);
+		if (temp>maxim)	{maxim = temp;}
+		if (temp<minim)	{minim = temp;}
+		buffer_cicular_bolcat_dades();	
 		int q=0,c=0;
-		if (mostres<j)
+		if (mostres-1<j)
 		{
-			for (q = j,c=1; c<=mostres; q--, c++)
+			for (q = j,c=1,temp=0; c<=mostres; q--, c++)
 			{
-				TempSensor = buffer_circular.dades[q];
-				temp = temp + TempSensor.temperatura;
-				printf("Temp:[%f]_________Temp2:[%f]\n", temp,TempSensor.temperatura);				
+				dada = buffer_circular.dades[q];
+				temp = temp + dada.temperatura;
+				printf("Temp:[%f]_________Temp2:[%f]\n", temp,dada.temperatura);				
 			}
 			mitja = temp / mostres;			
-		}*/
+		}
 		//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
 		printf("Maxim[%f]---------------------Minim[%f]-------mitja[%f]\n",maxim,minim,mitja);
 		j++;
