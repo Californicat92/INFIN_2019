@@ -59,7 +59,7 @@ void TancarSerie(int fd);
 
 typedef struct _TipusMostra{
 	long int pos;
-	char	temperatura[5];
+	float	temperatura;
 }TipusMostra;
 
 struct{
@@ -105,17 +105,17 @@ void	buffer_cicular_bolcat_dades(void){
 
 		for (i=0;i<buffer_circular.nombre_mostres;i++){
 			dada = buffer_circular.dades[i];
-			printf("Temps: %ld Temperatura: %s\n", dada.pos, dada.temperatura);
+			printf("Temps: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
 		}
 	}
 	else{
 		for (i=buffer_circular.index_entrada;i<MIDA_BUFFER;i++){
 			dada = buffer_circular.dades[i];
-			printf("Temps: %ld Temperatura: %s\n", dada.pos, dada.temperatura);
+			printf("Temps: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
 		}
 		for (i=0;i<buffer_circular.index_entrada;i++){
 			dada = buffer_circular.dades[i];
-			printf("Temps: %ld Temperatura: %s\n", dada.pos, dada.temperatura);
+			printf("Temps: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
 		}
 	}
 }
@@ -129,7 +129,7 @@ int t;
 
 int main(int argc, char **argv)
 {
-	int fd,v=10;
+	int fd,v=10,mostres=10,t=25;
 	char buf[100];
 	char missatge[100];
 	printf("Espera a que el sistema inicie\n");
@@ -149,11 +149,15 @@ int main(int argc, char **argv)
 		}
 		if (v==1){ //si se pone en marcha realizamos acciones
 			printf("Es posa en marxa l'adquisicio.\n");
-			t=25; //modificació del temps per a complir amb la protecció
 			while (t <01 || t>20) //protección valores erroneos
 			{
 				printf("Temps de mostreig desitjat(1-20):");
 				scanf("%i", &t); //guardamos el tiempo en una variable de tipo entero
+			}
+			while (mostres <01 || mostres>9) //protección valores erroneos
+			{
+				printf("Numero de mostres per fer la mitjana(1-9):");
+				scanf("%i", &mostres);
 			}
 			sprintf(missatge,"AM%i%.2iZ",v,t); //cargem a la variable a enviar les dades
 			break;
@@ -171,24 +175,55 @@ int main(int argc, char **argv)
 	Rebre(fd,buf);
 	
 	
-	int j=0;
-	int q=0;
+	int j=0,w=0;
+	char lecturatemp[4];
+	
+	float temp,minim=100000,maxim=0,mitja=0;
 	TipusMostra TempSensor;
 	while(1)
 	{
 		printf("captura muestra...%i\n",j);
 		memset(missatge,'\0', MIDA);
-		sprintf(missatge,"ACZ"); //Encenem LED 13
+		//ENCENEM/APAGAMOS LED 13 PER INFORMAR DE COMUNICACIONS
+		if (w==0){w=1;}else{w=0;}
+		sprintf(missatge,"AS13%iZ",w); 
+		Enviar(fd,missatge);
+		Rebre(fd,buf);
+		usleep(500);
+		//-----------------------------
+		//Encenem Lectura de mostra
+		sprintf(missatge,"ACZ");
 		Enviar(fd,missatge);
 		sleep(t);
 		Rebre(fd,buf);
+		//-----------------------------
 		buffer_cicular_inici();
 		TempSensor.pos = j;
-		printf("Dada guardada: %c%c%c%c%c\n",buf[3],buf[4],buf[5],buf[6],buf[7]);
-		for (q = 3; q < 8; q++) TempSensor.temperatura[q-2] = buf[q];
+		sprintf(lecturatemp,"%c%c%c%c%c",buf[3],buf[4],buf[5],buf[6],buf[7]);
+		temp=atof(lecturatemp); // convertimos char a float
+		TempSensor.temperatura = temp;
 		buffer_cicular_introduir(TempSensor);
+		if (temp>maxim)
+		{
+			maxim = temp;
+		}
+		else if (temp<minim)
+		{
+			minim=temp;
+		}/*
+		int q=0,c=0;
+		if (mostres<j)
+		{
+			for (q = j,c=1; c<=mostres; q--, c++)
+			{
+				TempSensor = buffer_circular.dades[q];
+				temp = temp + TempSensor.temperatura;
+				printf("Temp:[%f]_________Temp2:[%f]\n", temp,TempSensor.temperatura);				
+			}
+			mitja = temp / mostres;			
+		}*/
 		//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
-		printf("---------------------\n");
+		printf("Maxim[%f]---------------------Minim[%f]-------mitja[%f]\n",maxim,minim,mitja);
 		j++;
 	};
 	TancarSerie(fd);
