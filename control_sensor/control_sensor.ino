@@ -79,7 +79,7 @@ auxiliar=auxiliar+5;          //PER A FER PROVES canviar aquesta per AnalogIn---
   
    if ((i==tmostreig) && (MarxaParo==1)) {                          /* Es realitza la adquisició si i==tmostreig i seleccionem marxa d'adquisisció.*/
      
-      mostres[j] = map(auxiliar, 0, 1023, 0.0, 110.0);  /* Es van guardan els valors de la entrada en format temperatura */
+      mostres[j] = map(analogRead(AnalogIn), 0, 1023, 0.0, 110.0);  /* Es van guardan els valors de la entrada en format temperatura */
      
      switch (j){
 
@@ -287,7 +287,7 @@ int tempC=0;            /* EN EL CAS C       -> Es guarda el valor de la variabl
 
       size_t count = Serial.readBytesUntil('\n', mensaje, MIDA); /*LECTURA DEL MISSATGE. Es guarda el misatge en el array mensaje i 
                                                                    la cuantitat de caracter que te aquest en la variable count */                                                           
-      DEBUG(mensaje, count);
+      //DEBUG(mensaje, count);
    
     
    switch (mensaje[1]){

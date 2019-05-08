@@ -53,10 +53,10 @@ void buffer_cicular_inici(void);
 void buffer_cicular_final(void);
 
 //-------------------------------------INICIO PROGRAMA---------------------------------------
-
+int t;
 int main(int argc, char **argv)
 {
-	int fd,v=10,mostres=10,t=25;	
+	int fd,v=10,mostres=10,t=25;
 	char buf[100];
 	char missatge[100];
 	printf("Espera a que el sistema inicie\n");
@@ -115,7 +115,9 @@ int main(int argc, char **argv)
 		sprintf(missatge,"AS13%iZ",w); 
 		Enviar(fd,missatge);
 		Rebre(fd,buf);
-		usleep(500);
+		usleep(500000);
+		memset(missatge,'\0', MIDA);
+		memset(buf,'\0', MIDA);
 		//-----------------------------
 		//Encenem Lectura de mostra
 		sprintf(missatge,"ACZ");
@@ -130,14 +132,15 @@ int main(int argc, char **argv)
 		buffer_cicular_introduir(dada);
 		if (temp>maxim)	{maxim = temp;}
 		if (temp<minim)	{minim = temp;}
-		//buffer_cicular_bolcat_dades();	//***********************************************************************************************************
+		buffer_cicular_bolcat_dades();	//***********************************************************************************************************
 		int q=0,c=0;
 		if (mostres<j+2)
 		{
 			for (q = j,c=1,temp=0; c<=mostres; q--, c++)
 			{
-				dada = buffer_circular.dades[q];
-				temp = temp + dada.temperatura;				
+//				dada = buffer_circular.dades[q];
+//				temp = temp + dada.temperatura;				
+				temp = temp + buffer_circular.dades[q].temperatura;				
 			}
 			mitja = temp / mostres;			
 		}
@@ -225,17 +228,17 @@ void	buffer_cicular_bolcat_dades(void){
 
 		for (i=0;i<buffer_circular.nombre_mostres;i++){
 			dada = buffer_circular.dades[i];
-			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+			printf("Pos: %ld Temperatura: %.2f\n", dada.pos, dada.temperatura);
 		}
 	}
 	else{
 		for (i=buffer_circular.index_entrada;i<MIDAS_BUFFER;i++){
 			dada = buffer_circular.dades[i];
-			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+			printf("Pos: %ld Temperatura: %.2f\n", dada.pos, dada.temperatura);
 		}
 		for (i=0;i<buffer_circular.index_entrada;i++){
 			dada = buffer_circular.dades[i];
-			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+			printf("Pos: %ld Temperatura: %.2f\n", dada.pos, dada.temperatura);
 		}
 	}
 }
