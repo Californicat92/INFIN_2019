@@ -1,30 +1,9 @@
-//      Fita3.c
-//
-//This document is copyrighted (c) 1997 Peter Baumann, (c) 2001 Gary Frerking
-//and is distributed under the terms of the Linux Documentation Project (LDP)
-//license, stated below.
-//
-//Unless otherwise stated, Linux HOWTO documents are copyrighted by their
-//respective authors. Linux HOWTO documents may be reproduced and distributed
-//in whole or in part, in any medium physical or electronic, as long as this
-//copyright notice is retained on all copies. Commercial redistribution is
-//allowed and encouraged; however, the author would like to be notified of any
-//such distributions.
-//
-//All translations, derivative works, or aggregate works incorporating any
-//Linux HOWTO documents must be covered under this copyright notice. That is,
-//you may not produce a derivative work from a HOWTO and impose additional
-//restrictions on its distribution. Exceptions to these rules may be granted
-//under certain conditions; please contact the Linux HOWTO coordinator at the
-//address given below.
-//
-//In short, we wish to promote dissemination of this information through as
-//many channels as possible. However, we do wish to retain copyright on the
-//HOWTO documents, and would like to be notified of any plans to redistribute
-//the HOWTOs.
-//
-//http://www.ibiblio.org/pub/Linux/docs/HOWTO/Serial-Programming-HOWTO
+/*      Fita3.c
+Para compilar: gcc Fita3.c -o Fita3
+Para ejecutar: ./Fita3
+*/
 
+//-------------------------------------LIBRERIAS---------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -39,95 +18,45 @@
 #include <fcntl.h>                                                        
 #include <termios.h>       
 #include <sys/ioctl.h>    
- 
-#define BAUDRATE B9600
-//#define MODEMDEVICE "/dev/ttyS0"		//Conexió IGEP - Arduino
-#define MODEMDEVICE "/dev/ttyACM0"		//Conexió directa PC(Linux) - Arduino
-#define _POSIX_SOURCE 1					//POSIX compliant source
-#define MIDA 100
-#define	MIDAS_BUFFER 3600
+//-------------------------------------DEFINICION DE CONSTANTES PARA EL PROGRAMA---------------------------------------
+#define BAUDRATE B9600				//Velocitat port serie (BAUDRATE)
+//#define MODEMDEVICE "/dev/ttyS0"	//Conexió IGEP - Arduino
+#define MODEMDEVICE "/dev/ttyACM0"	//Conexió directa PC(Linux) - Arduino
+#define _POSIX_SOURCE 1				//POSIX compliant source
+#define MIDA 100					//Mida array de lectura i escritura
+#define	MIDAS_BUFFER 3600			//MIDA ARRAY CIRCULAR
 
-
+//-------------------------------------ESCTRUCTURA PARA FUNCION SERIE---------------------------------------
 struct termios oldtio,newtio;
-void Enviar(int fd,char *missatge);
-void Rebre(int fd,char *buf);
-int	ConfigurarSerie(void);
-void TancarSerie(int fd);
+void Enviar(int fd,char *missatge);	//Subrutina per a enviar dades per el port serie
+void Rebre(int fd,char *buf);		//Subrutina per a rebre dades per el port serie
+int	ConfigurarSerie(void);			//Configuració del port serie obert
+void TancarSerie(int fd);			//Tancar comunicació
 
-
-
-
-
-
+//-------------------------------------ESCTRUCTURA PARA FUNCION ARRAY CIRCULAR---------------------------------------
 typedef struct _TipusMostra{
 	long int pos;
 	float	temperatura;
 }TipusMostra;
-TipusMostra dada; 
 struct{
 	TipusMostra *dades;
-	int	index_entrada; //Apunta al lloc on es posarà la sagüent mostra
-	int nombre_mostres; //Nombre de mostres que hi ha el el buffer circular
+	int	index_entrada;				//Apunta al lloc on es posarà la sagüent mostra
+	int nombre_mostres;				//Nombre de mostres que hi ha el el buffer circular
 }buffer_circular;
 
-void	buffer_cicular_inici(void){
-	buffer_circular.dades = malloc(sizeof(TipusMostra)*MIDAS_BUFFER);
-	buffer_circular.index_entrada = 0;
-	buffer_circular.nombre_mostres = 0;
-}
+TipusMostra dada;
 
-void	buffer_cicular_final(void){
-	free(buffer_circular.dades);
-}
+void buffer_cicular_introduir(TipusMostra dada);
+void buffer_cicular_borrar_tot(void);
+void buffer_cicular_bolcat_dades(void);
+void buffer_cicular_inici(void);
+void buffer_cicular_final(void);
 
-void	buffer_cicular_introduir(TipusMostra dada){
-	buffer_circular.dades[buffer_circular.index_entrada] = dada;
-
-	buffer_circular.index_entrada++;
-	if (buffer_circular.index_entrada == MIDAS_BUFFER){
-		buffer_circular.index_entrada = 0; //Continuem pel principi: circular
-	}
-
-	if (buffer_circular.nombre_mostres < MIDAS_BUFFER){ //Agumentar fins que estigui ple
-		buffer_circular.nombre_mostres++;
-	}
-
-}
-
-void	buffer_cicular_borrar_tot(void){
-	buffer_circular.index_entrada = 0;
-	buffer_circular.nombre_mostres = 0;
-}
-
-void	buffer_cicular_bolcat_dades(void){
-	int i;
-	TipusMostra dada;
-
-	if (buffer_circular.nombre_mostres < MIDAS_BUFFER){
-
-		for (i=0;i<buffer_circular.nombre_mostres;i++){
-			dada = buffer_circular.dades[i];
-			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
-		}
-	}
-	else{
-		for (i=buffer_circular.index_entrada;i<MIDAS_BUFFER;i++){
-			dada = buffer_circular.dades[i];
-			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
-		}
-		for (i=0;i<buffer_circular.index_entrada;i++){
-			dada = buffer_circular.dades[i];
-			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
-		}
-	}
-}
-
-
-int t;
+//-------------------------------------INICIO PROGRAMA---------------------------------------
 
 int main(int argc, char **argv)
 {
-	int fd,v=10,mostres=10,t=25;
+	int fd,v=10,mostres=10,t=25;	
 	char buf[100];
 	char missatge[100];
 	printf("Espera a que el sistema inicie\n");
@@ -135,35 +64,35 @@ int main(int argc, char **argv)
 	fd = ConfigurarSerie();
 	memset(missatge,'\0', MIDA);
 	memset(buf,'\0', MIDA);
-	// Enviar el missatge 1
-	while (v !=0 || v !=1) //protección valores erroneos
+												// Enviar el missatge 1
+	while (v !=0 || v !=1) 						//protección valores erroneos
 	{
 		printf("Posar en marxa [1] o parar [0]:");
 		scanf("%i", &v);
-		while (v != 1 && v!=0) //protección valores erroneos
+		while (v != 1 && v!=0) 					//protección valores erroneos
 		{
 			printf("Posar en marxa [1] o parar [0]:");
 			scanf("%i", &v);
 		}
-		if (v==1){ //si se pone en marcha realizamos acciones
+		if (v==1){ 								//si se pone en marcha realizamos acciones
 			printf("Es posa en marxa l'adquisicio.\n");
-			while (t <01 || t>20) //protección valores erroneos
+			while (t <01 || t>20) 				//protección valores erroneos
 			{
 				printf("Temps de mostreig desitjat(1-20):");
-				scanf("%i", &t); //guardamos el tiempo en una variable de tipo entero
+				scanf("%i", &t); 				//guardamos el tiempo en una variable de tipo entero
 			}
-			while (mostres <01 || mostres>9) //protección valores erroneos
+			while (mostres <01 || mostres>9) 	//protección valores erroneos
 			{
 				printf("Numero de mostres per fer la mitjana(1-9):");
 				scanf("%i", &mostres);
 			}
-			sprintf(missatge,"AM%i%.2iZ",v,t); //cargem a la variable a enviar les dades
+			sprintf(missatge,"AM%i%.2iZ",v,t);	//cargem a la variable a enviar les dades
 			break;
 		}
-		else if (v==0)//si se para finalizamos
+		else if (v==0)							//si se presiona finalizar volvemos a preguntar
 		{ 
 			printf("Adquisicio aturada.\n");
-			sprintf(missatge,"AM000Z"); //cargem a la variable a enviar les dades
+			sprintf(missatge,"AM000Z");			//cargem a la variable a enviar les dades
 		}
 	}
 	
@@ -172,15 +101,15 @@ int main(int argc, char **argv)
 	memset(buf,'\0', MIDA);
 	Rebre(fd,buf);
 	
-	
 	int j=0,w=0;
 	char lecturatemp[4];
 	buffer_cicular_inici();
 	float temp,minim=100000,maxim=0,mitja=0;
 	while(1)
 	{
-		printf("capturando muestra...%i\n",j);
+		printf("capturando muestra...Número[%i]\n",j);
 		memset(missatge,'\0', MIDA);
+		memset(buf,'\0', MIDA);
 		//ENCENEM/APAGAMOS LED 13 PER INFORMAR DE COMUNICACIONS
 		if (w==0){w=1;}else{w=0;}
 		sprintf(missatge,"AS13%iZ",w); 
@@ -191,7 +120,7 @@ int main(int argc, char **argv)
 		//Encenem Lectura de mostra
 		sprintf(missatge,"ACZ");
 		Enviar(fd,missatge);
-		sleep(t);
+		sleep(t-0.5);
 		Rebre(fd,buf);
 		//-----------------------------
 		dada.pos = j;
@@ -201,26 +130,26 @@ int main(int argc, char **argv)
 		buffer_cicular_introduir(dada);
 		if (temp>maxim)	{maxim = temp;}
 		if (temp<minim)	{minim = temp;}
-		buffer_cicular_bolcat_dades();	
+		//buffer_cicular_bolcat_dades();	//***********************************************************************************************************
 		int q=0,c=0;
-		if (mostres-1<j)
+		if (mostres<j+2)
 		{
 			for (q = j,c=1,temp=0; c<=mostres; q--, c++)
 			{
 				dada = buffer_circular.dades[q];
-				temp = temp + dada.temperatura;
-				printf("Temp:[%f]_________Temp2:[%f]\n", temp,dada.temperatura);				
+				temp = temp + dada.temperatura;				
 			}
 			mitja = temp / mostres;			
 		}
 		//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
-		printf("Maxim[%f]---------------------Minim[%f]-------mitja[%f]\n",maxim,minim,mitja);
+		printf("Maxim[%.2f]---------------------Minim[%.2f]-------mitja[%.2f]\n",maxim,minim,mitja);
 		j++;
 	};
 	TancarSerie(fd);
 	return 0;
 }
 
+//-------------------------------------SUBRUTINAS COMUNICACION SERIE---------------------------------------
 int	ConfigurarSerie(void)
 {
 	int fd;
@@ -262,7 +191,7 @@ void Enviar(int fd,char *missatge)
 	
 	if (res <0) {tcsetattr(fd,TCSANOW,&oldtio); perror(MODEMDEVICE); exit(-1); }
 	
-	printf("Enviats %d bytes: %s\n",res,missatge);
+	//printf("Enviats %d bytes: %s\n",res,missatge);	//***********************************************************************************************************
 }
 void Rebre(int fd,char *buf)
 {
@@ -278,6 +207,59 @@ void Rebre(int fd,char *buf)
 		k++;
 	}
 	while (buf[k-1] != 'Z');	
-	printf("Rebuts %d bytes: %s\n",res,buf);
+	//printf("Rebuts %d bytes: %s\n",res,buf);	//***********************************************************************************************************
 }
 
+
+//-------------------------------------SUBRUTINAS PARA BUFFER CIRCULAR---------------------------------------
+
+void	buffer_cicular_borrar_tot(void){
+	buffer_circular.index_entrada = 0;
+	buffer_circular.nombre_mostres = 0;
+}
+
+void	buffer_cicular_bolcat_dades(void){
+	int i;
+
+	if (buffer_circular.nombre_mostres < MIDAS_BUFFER){
+
+		for (i=0;i<buffer_circular.nombre_mostres;i++){
+			dada = buffer_circular.dades[i];
+			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+		}
+	}
+	else{
+		for (i=buffer_circular.index_entrada;i<MIDAS_BUFFER;i++){
+			dada = buffer_circular.dades[i];
+			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+		}
+		for (i=0;i<buffer_circular.index_entrada;i++){
+			dada = buffer_circular.dades[i];
+			printf("Pos: %ld Temperatura: %f\n", dada.pos, dada.temperatura);
+		}
+	}
+}
+
+void	buffer_cicular_inici(void){
+	buffer_circular.dades = malloc(sizeof(TipusMostra)*MIDAS_BUFFER);
+	buffer_circular.index_entrada = 0;
+	buffer_circular.nombre_mostres = 0;
+}
+
+void	buffer_cicular_final(void){
+	free(buffer_circular.dades);
+}
+
+void	buffer_cicular_introduir(TipusMostra dada){
+	buffer_circular.dades[buffer_circular.index_entrada] = dada;
+
+	buffer_circular.index_entrada++;
+	if (buffer_circular.index_entrada == MIDAS_BUFFER){
+		buffer_circular.index_entrada = 0; //Continuem pel principi: circular
+	}
+
+	if (buffer_circular.nombre_mostres < MIDAS_BUFFER){ //Agumentar fins que estigui ple
+		buffer_circular.nombre_mostres++;
+	}
+
+}
