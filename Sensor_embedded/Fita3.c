@@ -133,11 +133,15 @@ int main(int argc, char **argv)
 		if (temp>maxim)	{maxim = temp;}
 		if (temp<minim)	{minim = temp;}
 		buffer_cicular_bolcat_dades();	//***********************************************************************************************************
-		int q=0,c=0;
+		int q=0,c=0,z=0;
 		if (mostres<j+2)
 		{
-			for (q = j,c=1,temp=0; c<=mostres; q--, c++)
+			if (buffer_circular.index_entrada==0) {z = MIDAS_BUFFER ;}
+			else {z=buffer_circular.index_entrada;}
+			for (q = z-1,c=1,temp=0; c<=mostres; q--, c++)
 			{
+				if (q==-1){q=MIDAS_BUFFER-1;}
+				printf("-->[%i]<--",q);
 //				dada = buffer_circular.dades[q];
 //				temp = temp + dada.temperatura;				
 				temp = temp + buffer_circular.dades[q].temperatura;				
