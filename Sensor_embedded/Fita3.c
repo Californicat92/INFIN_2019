@@ -24,7 +24,7 @@ Para ejecutar: ./Fita3
 #define MODEMDEVICE "/dev/ttyACM0"	//Conexió directa PC(Linux) - Arduino
 #define _POSIX_SOURCE 1				//POSIX compliant source
 #define MIDA 100					//Mida array de lectura i escritura
-#define	MIDAS_BUFFER 3600			//MIDA ARRAY CIRCULAR
+#define	MIDAS_BUFFER 5			//MIDA ARRAY CIRCULAR
 
 //-------------------------------------ESCTRUCTURA PARA FUNCION SERIE---------------------------------------
 struct termios oldtio,newtio;
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 			for (q = z-1,c=1,temp=0; c<=mostres; q--, c++)
 			{
 				if (q==-1){q=MIDAS_BUFFER-1;}
-				printf("-->[%i]<--",q);
+//				printf("-->[%i]<--",q);
 //				dada = buffer_circular.dades[q];
 //				temp = temp + dada.temperatura;				
 				temp = temp + buffer_circular.dades[q].temperatura;				
