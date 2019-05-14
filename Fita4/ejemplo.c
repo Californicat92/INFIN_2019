@@ -26,13 +26,15 @@
 #include <sys/wait.h>
 #include <pthread.h>
 
-int	i; //Variable global
-
+int i;
+int w=0;
 void* codi_fill(void* parametre){ // codi thread fill
    	while(i>0){
   		printf("Thread fill PID(%d) i=%d\n",getpid(), i);
   		i--;
+  		printf("\n %d", w);
   		sleep(2); // Retard de 2 segons
+
   	}
     pthread_exit(NULL);
     return NULL;
@@ -43,7 +45,7 @@ int main(int argc, char *argv[])
 {
 	pthread_t thread;
 	
-  i=5;
+	i=5;
 
   printf("Proces pare 1 PID(%d) \n",getpid() );
 
@@ -54,6 +56,9 @@ int main(int argc, char *argv[])
  	while(i<10){
   		printf("Proces pare PID(%d) i=%d\n",getpid(), i);
   		i++;
+  		if (i==7){
+		w=9;
+		}
   		sleep(1); // Retard de 1 segons
   	}
 
