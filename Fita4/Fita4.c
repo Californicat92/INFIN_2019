@@ -68,7 +68,7 @@ struct{
 }buffer_circular;
 
 //****************************VARIABLES GLOBALS************************************//
-int v, temps[2], num, mostres, nmitja=1;
+int v=10, temps=100, mostres;
 float minim=100000,maxim=0,mitja=0;
 TipusMostra dada;
 
@@ -88,13 +88,14 @@ int main(int argc, char *argv[])
 {
 	struct sockaddr_in	serverAddr;
 	struct sockaddr_in	clientAddr;
-	int			sockAddrSize;
+	unsigned int			sockAddrSize;
 	int			sFd;
-	int			newFd, d, c;
-	int			nRead;
+	int			newFd;//, d, c;
+//	int			nRead;
 	int 		result;
 	char		buffer[256];
 	char		missatge[20];
+	char		tempt[2];
 	
 
 	pthread_t thread;
@@ -145,15 +146,16 @@ int main(int argc, char *argv[])
 			switch(buffer[1]){ //en el segundo bit del array se escribira la funcion que queramos hacer segun la letra M,U,X...
 			
 				case 'M':
+				// inici mutex
 					if (strlen(buffer)!=7){  //comprobamos que la array sea de 7 bits '{''M''v'"temp""temps""Num"'}'
 						sprintf(missatge,"{M1}");// error en el protocolo
 						break;
 					}
 			
 					if(buffer[2]==49 || buffer[2]==48){ //comprobamos si el array[2] 'v' es 0(48 ASCII) o 1(49 ASCII)
-						v=buffer[2];  //le damos el valor a la variable v
+						v=buffer[2]-'0';  //le damos el valor a la variable v
 						sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
-						break;
+					
 					} 	
 					else{		
 						sprintf(missatge,"{M2}");//en el caso de que se un numero diferente a 0 o 1 imprimimos el error 2 de error en los parametros
@@ -165,11 +167,14 @@ int main(int argc, char *argv[])
 						break;
 					} 	
 					else {
-						temps[0]=buffer[3]; //en el caso de que todo este correcto damos los valores de la array a la variable temps
-						temps[1]=buffer[4];
+						sprintf(tempt,"%c%c",buffer[3],buffer[4]);
+						temps=atoi(tempt); // convertimos char a float
+						printf("\n---------%d---------------\n", temps);
 					}
+				// fi mutex
+
 					if(buffer[5]!=48){ //en el bit 6 de la array tiene q ser un valor entre 1 y 9
-						num=buffer[5]; //si es valor es diferente a 0 damos el valor a la variable num
+						mostres=buffer[5]-'0'; //si es valor es diferente a 0 damos el valor a la variable num
 					}	
 					else{
 						sprintf(missatge,"{M2}");//si es numero es 0 imprimimos el error 2 de parametros
@@ -181,9 +186,9 @@ int main(int argc, char *argv[])
 					else{
 						sprintf(missatge,"{M1}");//manda el mensaje de error en el protocolo
 					}
-					printf("\nEl valor de marxa(v) es: %c", v);
-					printf("\nEl temps per mostra es: %c%c", temps[0], temps[1]);
-					printf("\nEl valor del nombre de mostres per fer la mitjana: %c", num);
+					printf("\nEl valor de marxa(v) es: %d", v);
+					printf("\nEl temps per mostra es: %d", temps);
+					printf("\nEl valor del nombre de mostres per fer la mitjana: %d", mostres);
 				break;
 
 				case 'U':
@@ -281,108 +286,94 @@ int main(int argc, char *argv[])
 
 
 void* codi_fill(void* parametre){ // codi thread fill
-   
-   
-   int fd,v=10,mostres=10,t=25;
+
+	int fd;
 	char buf[100];
-	char missatge[100];
+	char miss[100];
 	printf("Espera a que el sistema inicie\n");
 	
 	fd = ConfigurarSerie();
-	memset(missatge,'\0', MIDA);
-	memset(buf,'\0', MIDA);
-												// Enviar el missatge 1
-	while (v !=0 || v !=1) 						//protección valores erroneos
-	{
-		printf("Posar en marxa [1] o parar [0]:");
-		scanf("%i", &v);
-		while (v != 1 && v!=0) 					//protección valores erroneos
-		{
-			printf("Posar en marxa [1] o parar [0]:");
-			scanf("%i", &v);
-		}
-		if (v==1){ 								//si se pone en marcha realizamos acciones
-			printf("Es posa en marxa l'adquisicio.\n");
-			while (t <01 || t>20) 				//protección valores erroneos
-			{
-				printf("Temps de mostreig desitjat(1-20):");
-				scanf("%i", &t); 				//guardamos el tiempo en una variable de tipo entero
-			}
-			while (mostres <01 || mostres>9) 	//protección valores erroneos
-			{
-				printf("Numero de mostres per fer la mitjana(1-9):");
-				scanf("%i", &mostres);
-			}
-			sprintf(missatge,"AM%i%.2iZ",v,t);	//cargem a la variable a enviar les dades
-			break;
-		}
-		else if (v==0)							//si se presiona finalizar volvemos a preguntar
-		{ 
-			printf("Adquisicio aturada.\n");
-			sprintf(missatge,"AM000Z");			//cargem a la variable a enviar les dades
-		}
-	}
-	
-	Enviar(fd,missatge);
-	sleep(1);
-	memset(buf,'\0', MIDA);
-	Rebre(fd,buf);
-	
-	int j=0,w=0;
-	char lecturatemp[4];
-	buffer_cicular_inici();
-	float temp;
 	while(1)
 	{
-		printf("capturando muestra...Número[%i]\n",j);
-		memset(missatge,'\0', MIDA);
+		memset(miss,'\0', MIDA);
 		memset(buf,'\0', MIDA);
-		//ENCENEM/APAGAMOS LED 13 PER INFORMAR DE COMUNICACIONS
-		if (w==0){w=1;}else{w=0;}
-		sprintf(missatge,"AS13%iZ",w); 
-		Enviar(fd,missatge);
-		Rebre(fd,buf);
-		usleep(500000);
-		memset(missatge,'\0', MIDA);
-		memset(buf,'\0', MIDA);
-		//-----------------------------
-		//Encenem Lectura de mostra
-		sprintf(missatge,"ACZ");
-		Enviar(fd,missatge);
-		sleep(t-0.5);
-		Rebre(fd,buf);
-		//-----------------------------
-		dada.pos = j;
-		sprintf(lecturatemp,"%c%c%c%c%c",buf[3],buf[4],buf[5],buf[6],buf[7]);
-		temp=atof(lecturatemp); // convertimos char a float
-		dada.temperatura = temp;
-		buffer_cicular_introduir(dada);
-		if (temp>maxim)	{maxim = temp;}
-		if (temp<minim)	{minim = temp;}
-		buffer_cicular_bolcat_dades();	//***********************************************************************************************************
-		int q=0,c=0,z=0;
-		if (mostres<j+2)
+		v=20;											// Enviar el missatge 1
+		// inici mutex
+		while (v !=0 || v !=1) 						//protección valores erroneos
 		{
-			if (buffer_circular.index_entrada==0) {z = MIDAS_BUFFER ;}
-			else {z=buffer_circular.index_entrada;}
-			for (q = z-1,c=1,temp=0; c<=mostres; q--, c++)
-			{
-				if (q==-1){q=MIDAS_BUFFER-1;}
-//				printf("-->[%i]<--",q);
-//				dada = buffer_circular.dades[q];
-//				temp = temp + dada.temperatura;				
-				temp = temp + buffer_circular.dades[q].temperatura;				
-			}
-			mitja = temp / mostres;			
-		}
-		//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
-		printf("Maxim[%.2f]---------------------Minim[%.2f]-------mitja[%.2f]\n",maxim,minim,mitja);
-		j++;
-	};
-	TancarSerie(fd);
 
-    pthread_exit(NULL);
-    return NULL;
+			if (v==1){ 								//si se pone en marcha realizamos acciones
+
+				printf("\n\n----------tiempo %i----------\n\n", temps);
+				sprintf(miss,"AM%i%.2iZ",v,temps);	//cargem a la variable a enviar les dades
+				printf(miss,"\n\n AM%i%.2iZ \n\n",v,temps);	//cargem a la variable a enviar les dades
+				break;
+			}
+			else if (v==0)							//si se presiona finalizar volvemos a preguntar
+			{ 
+				printf("Adquisicio aturada.\n");
+				sprintf(miss,"AM000Z");			//cargem a la variable a enviar les dades
+			}
+		}
+		// final mutex
+		Enviar(fd,miss);
+		sleep(1);
+		memset(buf,'\0', MIDA);
+		Rebre(fd,buf);
+		
+		int j=0,w=0;
+		char lecturatemp[4];
+		buffer_cicular_inici();
+		float temp;
+		while(v==1)
+		{
+			printf("capturando muestra...Número[%i]\n",j);
+			memset(miss,'\0', MIDA);
+			memset(buf,'\0', MIDA);
+			//ENCENEM/APAGAMOS LED 13 PER INFORMAR DE COMUNICACIONS
+			if (w==0){w=1;}else{w=0;}
+			sprintf(miss,"AS13%iZ",w); 
+			Enviar(fd,miss);
+			Rebre(fd,buf);
+			usleep(500000);
+			memset(miss,'\0', MIDA);
+			memset(buf,'\0', MIDA);
+			//-----------------------------
+			//Encenem Lectura de mostra
+			sprintf(miss,"ACZ");
+			Enviar(fd,miss);
+			sleep(temps-0.5);
+			Rebre(fd,buf);
+			//-----------------------------
+			dada.pos = j;
+			sprintf(lecturatemp,"%c%c%c%c%c",buf[3],buf[4],buf[5],buf[6],buf[7]);
+			temp=atof(lecturatemp); // convertimos char a float
+			dada.temperatura = temp;
+			buffer_cicular_introduir(dada);
+			if (temp>maxim)	{maxim = temp;}
+			if (temp<minim)	{minim = temp;}
+			buffer_cicular_bolcat_dades();	//***********************************************************************************************************
+			int q=0,c=0,z=0;
+			if (mostres<j+2)
+			{
+				if (buffer_circular.index_entrada==0) {z = MIDAS_BUFFER ;}
+				else {z=buffer_circular.index_entrada;}
+				for (q = z-1,c=1,temp=0; c<=mostres; q--, c++)
+				{
+					if (q==-1){q=MIDAS_BUFFER-1;}			
+					temp = temp + buffer_circular.dades[q].temperatura;				
+				}
+				mitja = temp / mostres;			
+			}
+			//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
+			printf("Maxim[%.2f]---------------------Minim[%.2f]-------mitja[%.2f]\n",maxim,minim,mitja);
+			j++;
+		}
+	}
+	TancarSerie(fd);
+	pthread_exit(NULL);
+	return NULL;
+	
 }
 //-------------------------------------SUBRUTINAS COMUNICACION SERIE---------------------------------------
 int	ConfigurarSerie(void)
