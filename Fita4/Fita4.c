@@ -5,7 +5,7 @@
     copyright            : (C) 2002 by A. Moreno
     email                : amoreno@euss.es
  ***************************************************************************/
-
+//gcc Fita4.c -lpthread -lrt -o Fita4
 /***************************************************************************
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -47,7 +47,7 @@
 #define MODEMDEVICE "/dev/ttyACM0"	//Conexió directa PC(Linux) - Arduino
 #define _POSIX_SOURCE 1				//POSIX compliant source
 #define MIDA 100					//Mida array de lectura i escritura
-#define	MIDAS_BUFFER 5			//MIDA ARRAY CIRCULAR
+#define	MIDAS_BUFFER 5				//MIDA ARRAY CIRCULAR
 
 //-------------------------------------ESCTRUCTURA PARA FUNCION SERIE---------------------------------------
 struct termios oldtio,newtio;
@@ -68,8 +68,10 @@ struct{
 }buffer_circular;
 
 //****************************VARIABLES GLOBALS************************************//
-int v=10, temps=100, mostres;
+int v=10, temps=100, mostres, compt_iteracions=0;
 float minim=100000,maxim=0,mitja=0;
+pthread_t thread;
+pthread_mutex_t mutex;
 TipusMostra dada;
 
 void buffer_cicular_introduir(TipusMostra dada);
@@ -98,16 +100,12 @@ int main(int argc, char *argv[])
 	char		tempt[2];
 	
 
-	pthread_t thread;
+
 	
-	
 
-  printf("Proces pare 1 PID(%d) \n",getpid() );
-
-  pthread_create(&thread, NULL, codi_fill, 0); //Es crea el thread fill
-
-  printf("Proces pare 2 PID(%d) \n",getpid() );// Proces Pare
-  
+	printf("Proces pare 1 PID(%d) \n",getpid() );
+	pthread_create(&thread, NULL, codi_fill, 0); //Es crea el thread fill
+	printf("Proces pare 2 PID(%d) \n",getpid() );// Proces Pare
   
 	/*Preparar l'adreÃ§a local*/
 	sockAddrSize=sizeof(struct sockaddr_in);
@@ -141,12 +139,11 @@ int main(int argc, char *argv[])
 		result = read(newFd, buffer, 256);
 		printf("Missatge rebut del client(bytes %d): %s\n",	result, buffer);
 		
-
+		pthread_mutex_lock(&mutex);// inici mutex
 		if(buffer[0]=='{'){ //comprobamos que el mensaje empieza por '}'
 			switch(buffer[1]){ //en el segundo bit del array se escribira la funcion que queramos hacer segun la letra M,U,X...
 			
 				case 'M':
-				// inici mutex
 					if (strlen(buffer)!=7){  //comprobamos que la array sea de 7 bits '{''M''v'"temp""temps""Num"'}'
 						sprintf(missatge,"{M1}");// error en el protocolo
 						break;
@@ -154,6 +151,8 @@ int main(int argc, char *argv[])
 			
 					if(buffer[2]==49 || buffer[2]==48){ //comprobamos si el array[2] 'v' es 0(48 ASCII) o 1(49 ASCII)
 						v=buffer[2]-'0';  //le damos el valor a la variable v
+						//compt_iteracions=0;	//reset del comptador
+						//buffer_cicular_borrar_tot(); //reset array circular
 						sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
 					
 					} 	
@@ -169,9 +168,7 @@ int main(int argc, char *argv[])
 					else {
 						sprintf(tempt,"%c%c",buffer[3],buffer[4]);
 						temps=atoi(tempt); // convertimos char a float
-						printf("\n---------%d---------------\n", temps);
 					}
-				// fi mutex
 
 					if(buffer[5]!=48){ //en el bit 6 de la array tiene q ser un valor entre 1 y 9
 						mostres=buffer[5]-'0'; //si es valor es diferente a 0 damos el valor a la variable num
@@ -180,6 +177,7 @@ int main(int argc, char *argv[])
 						sprintf(missatge,"{M2}");//si es numero es 0 imprimimos el error 2 de parametros
 						break;
 					}
+					
 					if(buffer[6]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
 						sprintf(missatge,"{M0}");//manda el mensaje que todo OK
 					}	 
@@ -238,9 +236,12 @@ int main(int argc, char *argv[])
 						sprintf(missatge,"{R1}"); //error de protocolo
 					break;
 					}
-					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine cn '}'
-						maxim=00.00; //reset del maxim
-						minim=00.00; //reset del minim
+					if(buffer[2]=='}'){ 	//comprobamos que el mensaje en el array termine cn '}'
+						maxim=00.00;		//reset del maxim
+						minim=00.00;		//reset del minim
+						//mitja=00.00;		//reset de la mitja
+						//compt_iteracions=0;	//reset del comptador
+						//buffer_cicular_borrar_tot(); //reset array circular
 						sprintf(missatge,"{R0}");
 					}	
 					else{
@@ -254,7 +255,7 @@ int main(int argc, char *argv[])
 					break;
 					}
 					if(buffer[2]=='}'){ //comprobamos que el mensaje en el array termine con '}'
-						sprintf(missatge,"{B0%.4d}",mostres);
+						sprintf(missatge,"{B0%.4d}",compt_iteracions);
 					}	
 					else{
 						sprintf(missatge,"{B10000}");//manda el mensaje de error en el protocolo
@@ -266,6 +267,7 @@ int main(int argc, char *argv[])
 					sprintf(missatge,"{B1}");
 				break;
 			}
+			pthread_mutex_unlock(&mutex);
 			/*Enviar*/
 			strcpy(buffer,missatge); //Copiar missatge a buffer
 			result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
@@ -279,11 +281,7 @@ int main(int argc, char *argv[])
 	pthread_join(thread, NULL);
 	
 }
-
-
-
-
-
+//****************************PROGRAMA ADQUISICIO DADES ARDUINO************************************//
 
 void* codi_fill(void* parametre){ // codi thread fill
 
@@ -297,37 +295,34 @@ void* codi_fill(void* parametre){ // codi thread fill
 	{
 		memset(miss,'\0', MIDA);
 		memset(buf,'\0', MIDA);
-		v=20;											// Enviar el missatge 1
-		// inici mutex
-		while (v !=0 || v !=1) 						//protección valores erroneos
+		v=20;													// Enviar el missatge 1
+		while (v !=0 || v !=1) 									//protección valores erroneos
 		{
 
-			if (v==1){ 								//si se pone en marcha realizamos acciones
-
-				printf("\n\n----------tiempo %i----------\n\n", temps);
-				sprintf(miss,"AM%i%.2iZ",v,temps);	//cargem a la variable a enviar les dades
-				printf(miss,"\n\n AM%i%.2iZ \n\n",v,temps);	//cargem a la variable a enviar les dades
+			if (v==1){ 											//si se pone en marcha realizamos acciones
+				sprintf(miss,"AM%i%.2iZ",v,temps);				//cargem a la variable a enviar les dades
+				printf(miss,"\n\n AM%i%.2iZ \n\n",v,temps);		//cargem a la variable a enviar les dades
 				break;
 			}
-			else if (v==0)							//si se presiona finalizar volvemos a preguntar
+			else if (v==0)										//si se presiona finalizar volvemos a preguntar
 			{ 
 				printf("Adquisicio aturada.\n");
-				sprintf(miss,"AM000Z");			//cargem a la variable a enviar les dades
+				v=20;											//Protecció per a que no imprimeixi reiteradament si parem
+				sprintf(miss,"AM000Z");							//cargem a la variable a enviar les dades
 			}
 		}
-		// final mutex
 		Enviar(fd,miss);
 		sleep(1);
 		memset(buf,'\0', MIDA);
 		Rebre(fd,buf);
 		
-		int j=0,w=0;
+		int w=0;
 		char lecturatemp[4];
 		buffer_cicular_inici();
 		float temp;
 		while(v==1)
 		{
-			printf("capturando muestra...Número[%i]\n",j);
+			printf("capturando muestra...Número[%i]\n",compt_iteracions);
 			memset(miss,'\0', MIDA);
 			memset(buf,'\0', MIDA);
 			//ENCENEM/APAGAMOS LED 13 PER INFORMAR DE COMUNICACIONS
@@ -345,16 +340,17 @@ void* codi_fill(void* parametre){ // codi thread fill
 			sleep(temps-0.5);
 			Rebre(fd,buf);
 			//-----------------------------
-			dada.pos = j;
+			dada.pos = compt_iteracions;
 			sprintf(lecturatemp,"%c%c%c%c%c",buf[3],buf[4],buf[5],buf[6],buf[7]);
 			temp=atof(lecturatemp); // convertimos char a float
 			dada.temperatura = temp;
 			buffer_cicular_introduir(dada);
-			if (temp>maxim)	{maxim = temp;}
+			pthread_mutex_lock(&mutex);// inici mutex
+			if (temp>maxim)	{maxim = temp;}	
 			if (temp<minim)	{minim = temp;}
 			buffer_cicular_bolcat_dades();	//***********************************************************************************************************
 			int q=0,c=0,z=0;
-			if (mostres<j+2)
+			if (mostres<compt_iteracions+2)
 			{
 				if (buffer_circular.index_entrada==0) {z = MIDAS_BUFFER ;}
 				else {z=buffer_circular.index_entrada;}
@@ -365,9 +361,10 @@ void* codi_fill(void* parametre){ // codi thread fill
 				}
 				mitja = temp / mostres;			
 			}
+			pthread_mutex_unlock(&mutex);// inici mutex
 			//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
 			printf("Maxim[%.2f]---------------------Minim[%.2f]-------mitja[%.2f]\n",maxim,minim,mitja);
-			j++;
+			compt_iteracions++;
 		}
 	}
 	TancarSerie(fd);
