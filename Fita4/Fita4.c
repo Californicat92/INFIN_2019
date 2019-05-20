@@ -299,9 +299,13 @@ void* codi_fill(void* parametre){ // codi thread fill
 		while (v !=0 || v !=1) 									//protección valores erroneos
 		{
 
-			if (v==1){ 											//si se pone en marcha realizamos acciones
+			if (v==1){ 											//si se pone en marcha realizamos acciones		
+				pthread_mutex_lock(&mutex);						// inici mutex
+
 				sprintf(miss,"AM%i%.2iZ",v,temps);				//cargem a la variable a enviar les dades
 				printf(miss,"\n\n AM%i%.2iZ \n\n",v,temps);		//cargem a la variable a enviar les dades
+						pthread_mutex_unlock(&mutex);			// inici mutex
+
 				break;
 			}
 			else if (v==0)										//si se presiona finalizar volvemos a preguntar
