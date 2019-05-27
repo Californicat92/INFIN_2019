@@ -47,7 +47,7 @@
 #define MODEMDEVICE "/dev/ttyACM0"	//Conexió directa PC(Linux) - Arduino
 #define _POSIX_SOURCE 1				//POSIX compliant source
 #define MIDA 100					//Mida array de lectura i escritura
-#define	MIDAS_BUFFER 5				//MIDA ARRAY CIRCULAR
+#define	MIDAS_BUFFER 3600			//MIDA ARRAY CIRCULAR
 
 //-------------------------------------ESCTRUCTURA PARA FUNCION SERIE---------------------------------------
 struct termios oldtio,newtio;
@@ -92,8 +92,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in	clientAddr;
 	unsigned int			sockAddrSize;
 	int			sFd;
-	int			newFd;//, d, c;
-//	int			nRead;
+	int			newFd;
 	int 		result;
 	char		buffer[256];
 	char		missatge[20];
@@ -154,8 +153,10 @@ int main(int argc, char *argv[])
 						//compt_iteracions=0;	//reset del comptador
 						//buffer_cicular_borrar_tot(); //reset array circular
 						sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
-					
-					} 	
+						if(v==0){
+						 break;
+						}
+					}
 					else{		
 						sprintf(missatge,"{M2}");//en el caso de que se un numero diferente a 0 o 1 imprimimos el error 2 de error en los parametros
 						break;
@@ -267,7 +268,7 @@ int main(int argc, char *argv[])
 					sprintf(missatge,"{B1}");
 				break;
 			}
-			pthread_mutex_unlock(&mutex);
+			pthread_mutex_unlock(&mutex);			//Final del mutex
 			/*Enviar*/
 			strcpy(buffer,missatge); //Copiar missatge a buffer
 			result = write(newFd, buffer, strlen(buffer)+1); //+1 per enviar el 0 final de cadena
@@ -293,34 +294,32 @@ void* codi_fill(void* parametre){ // codi thread fill
 	fd = ConfigurarSerie();
 	while(1)
 	{
-		memset(miss,'\0', MIDA);
-		memset(buf,'\0', MIDA);
-		v=20;													// Enviar el missatge 1
-		while (v !=0 || v !=1) 									//protección valores erroneos
+		memset(miss,'\0', MIDA);								//Borrar contenido de miss
+		memset(buf,'\0', MIDA);									//Borrar contenido de buf	
+		v=20;													//Se da el valor de 20 a <<v>> para evitar que entre en el bucle antes de que se reciba un mensaje en el servidor 
+		while (v !=0 || v !=1) 									//Protección valores erroneos
 		{
 
-			if (v==1){ 											//si se pone en marcha realizamos acciones		
-				pthread_mutex_lock(&mutex);						// inici mutex
+			if (v==1){ 											//Si se pone en marcha realizamos acciones		
+				pthread_mutex_lock(&mutex);						//Inici mutex
 
-				sprintf(miss,"AM%i%.2iZ",v,temps);				//cargem a la variable a enviar les dades
-				printf(miss,"\n\n AM%i%.2iZ \n\n",v,temps);		//cargem a la variable a enviar les dades
-						pthread_mutex_unlock(&mutex);			// inici mutex
+				sprintf(miss,"AM%i%.2iZ",v,temps);				//Cargamos a la variable miss el mensaje de marcha y tiempo definido en el servidor
+				pthread_mutex_unlock(&mutex);					//Final mutex
 
 				break;
 			}
-			else if (v==0)										//si se presiona finalizar volvemos a preguntar
+			else if (v==0)										//Si se pone en paro se paran acciones y vuelve a preguntar
 			{ 
-				printf("Adquisicio aturada.\n");
-				v=20;											//Protecció per a que no imprimeixi reiteradament si parem
-				sprintf(miss,"AM000Z");							//cargem a la variable a enviar les dades
+				sprintf(miss,"AM000Z");							//Cargamos a la variable miss el mensaje de paro
 			}
 		}
-		Enviar(fd,miss);
+		if (v==0) {printf("Adquisicio aturada.\n");}			//Mensaje de paro de adquisicion en paro fuera del bucle para que no se repita.
+		Enviar(fd,miss);										//Llamada a la funcion de envio de mensaje para enviar --> se copia el contenido de miss en fd para el envio
 		sleep(1);
-		memset(buf,'\0', MIDA);
-		Rebre(fd,buf);
+		memset(buf,'\0', MIDA);									//Borrar contenido de varible buf
+		Rebre(fd,buf);											//Llamada a la funcion de recibo de mensaje --> se copia el contenido de fd en buf para el recivo
 		
-		int w=0;
+		int w=0;												//variable que se usa para alternar el encendido y apagado del pin 13 de arduino
 		char lecturatemp[4];
 		buffer_cicular_inici();
 		float temp;
@@ -344,12 +343,13 @@ void* codi_fill(void* parametre){ // codi thread fill
 			sleep(temps-0.5);
 			Rebre(fd,buf);
 			//-----------------------------
+			pthread_mutex_lock(&mutex);// inici mutex
 			dada.pos = compt_iteracions;
 			sprintf(lecturatemp,"%c%c%c%c%c",buf[3],buf[4],buf[5],buf[6],buf[7]);
 			temp=atof(lecturatemp); // convertimos char a float
+			temp=temp*(70.0/1024.0);    // convertim de 0 a 0 i de 1024 a 70ºC
 			dada.temperatura = temp;
 			buffer_cicular_introduir(dada);
-			pthread_mutex_lock(&mutex);// inici mutex
 			if (temp>maxim)	{maxim = temp;}	
 			if (temp<minim)	{minim = temp;}
 			buffer_cicular_bolcat_dades();	//***********************************************************************************************************
@@ -367,7 +367,7 @@ void* codi_fill(void* parametre){ // codi thread fill
 			}
 			pthread_mutex_unlock(&mutex);// inici mutex
 			//buffer_cicular_bolcat_dades();	//Fem un bocat del contingut del buffer circular
-			printf("Maxim[%.2f]---------------------Minim[%.2f]-------mitja[%.2f]\n",maxim,minim,mitja);
+			printf("Maxim[%.2f ºC]---------------------Minim[%.2f ºC]-------mitja[%.2f ºC]\n",maxim,minim,mitja);
 			compt_iteracions++;
 		}
 	}
