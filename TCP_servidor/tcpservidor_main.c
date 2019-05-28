@@ -105,9 +105,11 @@ int main(int argc, char *argv[])
 					}
 			
 					if(buffer[2]==49 || buffer[2]==48){ //comprobamos si el array[2] 'v' es 0(48 ASCII) o 1(49 ASCII)
-						v=buffer[2];  //le damos el valor a la variable v
+						v=buffer[2]-'0';  //le damos el valor a la variable v
 						sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
+						if(v==0){
 						break;
+						}
 					} 	
 					else{		
 						sprintf(missatge,"{M2}");//en el caso de que se un numero diferente a 0 o 1 imprimimos el error 2 de error en los parametros
