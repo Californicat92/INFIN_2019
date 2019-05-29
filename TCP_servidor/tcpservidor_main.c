@@ -28,6 +28,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <fcntl.h>                                                        
+#include <termios.h>       
+#include <sys/ioctl.h>  
 
 #define SERVER_PORT_NUM		5001
 #define SERVER_MAX_CONNECTIONS	4
@@ -48,15 +54,15 @@ int main(int argc, char *argv[])
 {
 	struct sockaddr_in	serverAddr;
 	struct sockaddr_in	clientAddr;
-	int			sockAddrSize;
+	unsigned int			sockAddrSize;
 	int			sFd;
-	int			newFd, d, c;
-	int			nRead;
+	int			newFd;
 	int 		result;
 	char		buffer[256];
 	char		missatge[20];
-	int v, temps[2], num, mostres, nmitja=1;
-	float mitjana=00.00, maxim=00.00, minim=00.00;
+	char 		tempt[2];
+	int v=10, temps=0, num, mostres, nmitja=1;
+	float mitjana=00.00, maxim=00.00, minim=10000;
 
 
 
@@ -121,8 +127,8 @@ int main(int argc, char *argv[])
 						break;
 					} 	
 					else {
-						temps[0]=buffer[3]; //en el caso de que todo este correcto damos los valores de la array a la variable temps
-						temps[1]=buffer[4];
+						sprintf(tempt,"%c%c",buffer[3],buffer[4]);
+						temps=atoi(tempt); // convertimos char a float
 					}
 					if(buffer[5]!=48){ //en el bit 6 de la array tiene q ser un valor entre 1 y 9
 						num=buffer[5]; //si es valor es diferente a 0 damos el valor a la variable num
@@ -138,7 +144,7 @@ int main(int argc, char *argv[])
 						sprintf(missatge,"{M1}");//manda el mensaje de error en el protocolo
 					}
 					printf("\nEl valor de marxa(v) es: %c", v);
-					printf("\nEl temps per mostra es: %c%c", temps[0], temps[1]);
+					printf("\nEl temps per mostra es: %d", temps);
 					printf("\nEl valor del nombre de mostres per fer la mitjana: %c", num);
 				break;
 
