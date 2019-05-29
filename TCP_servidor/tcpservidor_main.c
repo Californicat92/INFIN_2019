@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 					else{
 						sprintf(missatge,"{M1}");//manda el mensaje de error en el protocolo
 					}
-					printf("\nEl valor de marxa(v) es: %c", v);
+					printf("\nEl valor de marxa(v) es: %d", v);
 					printf("\nEl temps per mostra es: %d", temps);
 					printf("\nEl valor del nombre de mostres per fer la mitjana: %c", num);
 				break;
