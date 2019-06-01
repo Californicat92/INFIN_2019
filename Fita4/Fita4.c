@@ -152,9 +152,9 @@ int main(int argc, char *argv[])
 						v=buffer[2]-'0';  //le damos el valor a la variable v
 						//compt_iteracions=0;	//reset del comptador
 						//buffer_cicular_borrar_tot(); //reset array circular
-						sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
 						if(v==0){
-						 break;
+							sprintf(missatge,"{M0}");//en el caso de que sea 0 paramos el programa y mostramos 0 conforme no ha habido ningun error
+							break;
 						}
 					}
 					else{		
